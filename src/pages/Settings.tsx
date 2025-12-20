@@ -30,53 +30,53 @@ export default function Settings() {
       title="Settings"
       subtitle="Manage your account and preferences"
     >
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-3 gap-4">
         {/* Left Column */}
-        <div className="col-span-2 space-y-6">
+        <div className="col-span-2 space-y-4">
           {/* Profile */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
-              <User className="w-5 h-5 text-primary" />
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+              <User className="w-4 h-4 text-primary" />
               Profile Settings
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Full Name</label>
-                <Input defaultValue="Admin User" className="bg-muted border-0" />
+                <label className="text-xs text-muted-foreground mb-1 block">Full Name</label>
+                <Input defaultValue="Admin User" className="bg-muted border-0 h-8 text-xs" />
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Email</label>
-                <Input defaultValue="admin@staffinix.com" className="bg-muted border-0" />
+                <label className="text-xs text-muted-foreground mb-1 block">Email</label>
+                <Input defaultValue="admin@staffinix.com" className="bg-muted border-0 h-8 text-xs" />
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Role</label>
-                <Input defaultValue="Administrator" className="bg-muted border-0" disabled />
+                <label className="text-xs text-muted-foreground mb-1 block">Role</label>
+                <Input defaultValue="Administrator" className="bg-muted border-0 h-8 text-xs" disabled />
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Phone</label>
-                <Input defaultValue="+1 (555) 123-4567" className="bg-muted border-0" />
+                <label className="text-xs text-muted-foreground mb-1 block">Phone</label>
+                <Input defaultValue="+1 (555) 123-4567" className="bg-muted border-0 h-8 text-xs" />
               </div>
             </div>
-            <Button className="mt-4">Save Changes</Button>
+            <Button size="sm" className="mt-3 h-7 text-xs">Save Changes</Button>
           </Card>
 
           {/* Notifications */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
-              <Bell className="w-5 h-5 text-primary" />
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Bell className="w-4 h-4 text-primary" />
               Notification Preferences
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2">
               {[
-                { label: 'New job requirement alerts', description: 'Get notified when new jobs match your consultants', enabled: true },
-                { label: 'Submission status updates', description: 'Updates when submission status changes', enabled: true },
-                { label: 'Interview reminders', description: 'Reminders before scheduled interviews', enabled: true },
-                { label: 'Weekly performance reports', description: 'Receive weekly analytics summary', enabled: false },
+                { label: 'New job requirement alerts', description: 'Get notified when new jobs match', enabled: true },
+                { label: 'Submission status updates', description: 'Updates when status changes', enabled: true },
+                { label: 'Interview reminders', description: 'Reminders before interviews', enabled: true },
+                { label: 'Weekly performance reports', description: 'Receive weekly analytics', enabled: false },
               ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div key={item.label} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
                   <div>
-                    <p className="font-medium text-foreground">{item.label}</p>
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                    <p className="text-xs font-medium text-foreground">{item.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{item.description}</p>
                   </div>
                   <Switch defaultChecked={item.enabled} />
                 </div>
@@ -85,93 +85,93 @@ export default function Settings() {
           </Card>
 
           {/* Security */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-primary" />
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary" />
               Security
             </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
                 <div>
-                  <p className="font-medium text-foreground">Two-Factor Authentication</p>
-                  <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
+                  <p className="text-xs font-medium text-foreground">Two-Factor Authentication</p>
+                  <p className="text-[10px] text-muted-foreground">Add extra security</p>
                 </div>
-                <Button variant="outline" size="sm">Enable</Button>
+                <Button variant="outline" size="sm" className="h-6 text-xs">Enable</Button>
               </div>
-              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
                 <div>
-                  <p className="font-medium text-foreground">Change Password</p>
-                  <p className="text-sm text-muted-foreground">Last changed 30 days ago</p>
+                  <p className="text-xs font-medium text-foreground">Change Password</p>
+                  <p className="text-[10px] text-muted-foreground">Last changed 30 days ago</p>
                 </div>
-                <Button variant="outline" size="sm">Update</Button>
+                <Button variant="outline" size="sm" className="h-6 text-xs">Update</Button>
               </div>
             </div>
           </Card>
         </div>
 
         {/* Right Column */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Integrations */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-primary" />
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" />
               Integrations
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {integrations.map((integration) => (
                 <div 
                   key={integration.name}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                  className="flex items-center justify-between p-2 bg-muted/50 rounded-lg"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <integration.icon className="w-5 h-5 text-primary" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <integration.icon className="w-3 h-3 text-primary" />
                     </div>
-                    <span className="font-medium text-foreground">{integration.name}</span>
+                    <span className="text-xs font-medium text-foreground">{integration.name}</span>
                   </div>
                   <Badge 
                     variant={integration.status === 'connected' ? 'default' : 'secondary'}
-                    className={integration.status === 'connected' ? 'bg-success/20 text-success' : ''}
+                    className={`text-[10px] ${integration.status === 'connected' ? 'bg-success/20 text-success' : ''}`}
                   >
                     {integration.status}
                   </Badge>
                 </div>
               ))}
             </div>
-            <Button variant="outline" className="w-full mt-4">
+            <Button variant="outline" size="sm" className="w-full mt-3 h-7 text-xs">
               Manage Integrations
             </Button>
           </Card>
 
           {/* API Keys */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Key className="w-5 h-5 text-primary" />
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Key className="w-4 h-4 text-primary" />
               API Keys
             </h3>
-            <div className="space-y-3">
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <p className="text-sm font-medium text-foreground">Production Key</p>
-                <p className="text-xs text-muted-foreground font-mono mt-1">sk_live_••••••••••••4x2k</p>
+            <div className="space-y-2">
+              <div className="p-2 bg-muted/50 rounded-lg">
+                <p className="text-xs font-medium text-foreground">Production Key</p>
+                <p className="text-[10px] text-muted-foreground font-mono mt-0.5">sk_live_••••••••4x2k</p>
               </div>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <p className="text-sm font-medium text-foreground">Test Key</p>
-                <p className="text-xs text-muted-foreground font-mono mt-1">sk_test_••••••••••••8y3m</p>
+              <div className="p-2 bg-muted/50 rounded-lg">
+                <p className="text-xs font-medium text-foreground">Test Key</p>
+                <p className="text-[10px] text-muted-foreground font-mono mt-0.5">sk_test_••••••••8y3m</p>
               </div>
             </div>
-            <Button variant="outline" className="w-full mt-4">
+            <Button variant="outline" size="sm" className="w-full mt-3 h-7 text-xs">
               Generate New Key
             </Button>
           </Card>
 
           {/* Theme */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Palette className="w-5 h-5 text-primary" />
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Palette className="w-4 h-4 text-primary" />
               Appearance
             </h3>
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="font-medium text-foreground">Dark Mode</span>
+            <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+              <span className="text-xs font-medium text-foreground">Dark Mode</span>
               <Switch defaultChecked />
             </div>
           </Card>
