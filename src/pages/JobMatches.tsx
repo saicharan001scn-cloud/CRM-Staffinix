@@ -9,7 +9,8 @@ import { mockJobMatches, JobMatch } from '@/data/mockJobMatches';
 import { useSubmissions } from '@/context/SubmissionsContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Building2, Sparkles, ArrowLeft, Users } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { MapPin, Building2, Sparkles, ArrowLeft, Users, Calendar, DollarSign, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function JobMatches() {
@@ -27,11 +28,11 @@ export default function JobMatches() {
 
   if (!job) {
     return (
-      <MainLayout title="Job Not Found" subtitle="The job you're looking for doesn't exist">
+      <MainLayout title="Job Not Found" subtitle="">
         <div className="flex flex-col items-center justify-center py-12">
-          <p className="text-muted-foreground mb-4">No job found with this ID.</p>
-          <Button onClick={() => navigate('/jobs')} variant="outline">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+          <p className="text-muted-foreground mb-4 text-xs">No job found with this ID.</p>
+          <Button onClick={() => navigate('/jobs')} variant="outline" size="sm">
+            <ArrowLeft className="w-3 h-3 mr-2" />
             Back to Jobs
           </Button>
         </div>
@@ -48,8 +49,8 @@ export default function JobMatches() {
     if (selectedMatch) {
       setTailoredConsultants(prev => new Set(prev).add(selectedMatch.consultant.id));
       setTailorModalOpen(false);
-      toast.success('Resume tailored successfully!', {
-        description: `${selectedMatch.consultant.name}'s resume has been optimized for this position.`
+      toast.success('Resume tailored!', {
+        description: `${selectedMatch.consultant.name}'s resume optimized.`
       });
     }
   };
@@ -82,7 +83,7 @@ export default function JobMatches() {
       setSubmitModalOpen(false);
       
       toast.success('Submission successful!', {
-        description: `${selectedMatch.consultant.name} has been submitted for ${job.title}.`
+        description: `${selectedMatch.consultant.name} submitted for ${job.title}.`
       });
       
       navigate('/submissions');
@@ -94,73 +95,110 @@ export default function JobMatches() {
       title="Matched Consultants"
       subtitle={`AI-matched candidates for ${job.title}`}
     >
-      {/* Job Header */}
-      <div className="p-6 bg-card border border-border rounded-xl mb-6">
-        <div className="flex items-start justify-between">
+      <Button 
+        onClick={() => navigate('/jobs')} 
+        variant="ghost" 
+        size="sm" 
+        className="mb-4 gap-2 text-xs"
+      >
+        <ArrowLeft className="w-3 h-3" />
+        Back to Jobs
+      </Button>
+
+      {/* Job Header with Full JD */}
+      <Card className="p-4 mb-4">
+        <div className="flex items-start justify-between mb-3">
           <div>
-            <h2 className="text-2xl font-semibold text-foreground mb-2">{job.title}</h2>
-            <div className="flex items-center gap-4 text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
+            <h2 className="text-base font-semibold text-foreground">{job.title}</h2>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+              <div className="flex items-center gap-1">
+                <Building2 className="w-3 h-3" />
                 <span>{job.client}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
+              <div className="flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
                 <span>{job.location}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <DollarSign className="w-3 h-3" />
+                <span>${job.rate.min}-${job.rate.max}/hr</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                <span>Deadline: {job.deadline}</span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => navigate('/jobs')} className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Jobs
-            </Button>
-          </div>
+          <Badge variant="outline" className="text-xs">{job.jobType}</Badge>
         </div>
         
+        {/* Full Job Description */}
+        <div className="p-3 bg-muted/30 rounded-lg mb-3">
+          <div className="flex items-center gap-1 mb-2">
+            <FileText className="w-3 h-3 text-primary" />
+            <span className="text-xs font-medium text-foreground">Job Description</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {job.description}
+            {' '}We are looking for an experienced professional with strong skills in the required technologies. 
+            The ideal candidate should have excellent communication skills and ability to work in a fast-paced environment. 
+            This is a {job.jobType} position based in {job.location}. The role requires working closely with cross-functional teams 
+            to deliver high-quality solutions. Candidates must be comfortable with agile methodologies and have experience 
+            with enterprise-level applications.
+          </p>
+        </div>
+
         {/* Required Skills */}
-        <div className="mt-4 pt-4 border-t border-border">
-          <span className="text-sm text-muted-foreground mb-2 block">Required Skills</span>
-          <div className="flex flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Skills:</span>
+          <div className="flex flex-wrap gap-1">
             {job.skills.map(skill => (
-              <Badge key={skill} variant="secondary">{skill}</Badge>
+              <Badge key={skill} variant="secondary" className="text-[10px] px-1.5 py-0">{skill}</Badge>
             ))}
           </div>
         </div>
-      </div>
+
+        {/* Visa Requirements */}
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-xs text-muted-foreground">Visa:</span>
+          <div className="flex flex-wrap gap-1">
+            {job.visaRequirements.map(visa => (
+              <Badge key={visa} variant="outline" className="text-[10px] px-1.5 py-0">{visa}</Badge>
+            ))}
+          </div>
+        </div>
+      </Card>
 
       {/* Match Stats */}
-      <div className="flex items-center gap-6 mb-6 p-4 bg-card border border-border rounded-xl">
-        <div className="flex items-center gap-3">
-          <Users className="w-5 h-5 text-primary" />
-          <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{matches.length}</span> Matched Consultants
+      <div className="flex items-center gap-4 mb-4 p-3 bg-card border border-border rounded-lg">
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-primary" />
+          <span className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{matches.length}</span> Matched
           </span>
         </div>
-        <div className="h-4 w-px bg-border" />
-        <div className="flex items-center gap-3">
-          <Sparkles className="w-5 h-5 text-success" />
-          <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">
+        <div className="h-3 w-px bg-border" />
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-success" />
+          <span className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">
               {matches.filter(m => m.matchScore >= 85).length}
-            </span> High Matches (85%+)
+            </span> High Matches
           </span>
         </div>
-        <div className="h-4 w-px bg-border" />
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            Avg Score: <span className="font-semibold text-foreground">
-              {matches.length > 0 
-                ? Math.round(matches.reduce((acc, m) => acc + m.matchScore, 0) / matches.length)
-                : 0}%
-            </span>
+        <div className="h-3 w-px bg-border" />
+        <span className="text-xs text-muted-foreground">
+          Avg: <span className="font-medium text-foreground">
+            {matches.length > 0 
+              ? Math.round(matches.reduce((acc, m) => acc + m.matchScore, 0) / matches.length)
+              : 0}%
           </span>
-        </div>
+        </span>
       </div>
 
       {/* Matched Consultants Grid */}
       {matches.length > 0 ? (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-4">
           {matches
             .sort((a, b) => b.matchScore - a.matchScore)
             .map((match, index) => (
@@ -175,10 +213,10 @@ export default function JobMatches() {
             ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 bg-card border border-border rounded-xl">
-          <Users className="w-12 h-12 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium text-foreground mb-2">No matches found</p>
-          <p className="text-muted-foreground">No consultants match this job's requirements yet.</p>
+        <div className="flex flex-col items-center justify-center py-12 bg-card border border-border rounded-lg">
+          <Users className="w-10 h-10 text-muted-foreground mb-3" />
+          <p className="text-sm font-medium text-foreground mb-1">No matches found</p>
+          <p className="text-xs text-muted-foreground">No consultants match this job's requirements.</p>
         </div>
       )}
 
