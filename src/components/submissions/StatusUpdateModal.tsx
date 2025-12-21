@@ -3,16 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { SubmissionStatus } from '@/types';
+import { SubmissionStatus, Submission } from '@/types';
 import { cn } from '@/lib/utils';
-import { Check, ArrowRight, Clock } from 'lucide-react';
+import { Check, ArrowRight, Clock, AlertTriangle, DollarSign } from 'lucide-react';
 
 interface StatusUpdateModalProps {
   open: boolean;
   onClose: () => void;
-  currentStatus: SubmissionStatus;
-  consultantName: string;
-  jobTitle: string;
+  submission: Submission;
   onUpdateStatus: (newStatus: SubmissionStatus, notes?: string) => void;
 }
 
@@ -78,18 +76,20 @@ const statusOrder: SubmissionStatus[] = [
 export function StatusUpdateModal({ 
   open, 
   onClose, 
-  currentStatus, 
-  consultantName,
-  jobTitle,
+  submission,
   onUpdateStatus 
 }: StatusUpdateModalProps) {
   const [selectedStatus, setSelectedStatus] = useState<SubmissionStatus | null>(null);
   const [notes, setNotes] = useState('');
 
-  const currentIndex = statusOrder.indexOf(currentStatus);
+  const currentIndex = statusOrder.indexOf(submission.status);
+  
+  // Validation: Cannot move to Submission without negotiated rate
+  const canMoveToSubmission = submission.submissionRate !== undefined && submission.submissionRate > 0;
+  const tryingToSubmitWithoutRate = selectedStatus === 'submission' && !canMoveToSubmission;
 
   const handleSubmit = () => {
-    if (selectedStatus) {
+    if (selectedStatus && !tryingToSubmitWithoutRate) {
       onUpdateStatus(selectedStatus, notes || undefined);
       setSelectedStatus(null);
       setNotes('');
@@ -109,7 +109,7 @@ export function StatusUpdateModal({
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold text-foreground">Update Status</DialogTitle>
           <p className="text-[10px] text-muted-foreground mt-1">
-            {consultantName} • {jobTitle}
+            {submission.consultantName} • {submission.jobTitle}
           </p>
         </DialogHeader>
 
@@ -119,13 +119,42 @@ export function StatusUpdateModal({
             <p className="text-[10px] text-muted-foreground mb-1">Current Status</p>
             <div className={cn(
               "inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-medium",
-              statusConfig[currentStatus].bgColor,
-              statusConfig[currentStatus].color
+              statusConfig[submission.status].bgColor,
+              statusConfig[submission.status].color
             )}>
               <Clock className="w-2.5 h-2.5" />
-              {statusConfig[currentStatus].label}
+              {statusConfig[submission.status].label}
             </div>
           </div>
+
+          {/* Rate Summary (for Applied → Submission validation) */}
+          {submission.status === 'applied' && (
+            <div className={cn(
+              "p-2 rounded-lg border",
+              canMoveToSubmission ? "bg-success/10 border-success/30" : "bg-amber-500/10 border-amber-500/30"
+            )}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <DollarSign className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground">Rate Status</span>
+                </div>
+                {canMoveToSubmission ? (
+                  <span className="text-[9px] text-success flex items-center gap-0.5">
+                    <Check className="w-2.5 h-2.5" /> Rate confirmed at ${submission.submissionRate}/hr
+                  </span>
+                ) : (
+                  <span className="text-[9px] text-amber-500 flex items-center gap-0.5">
+                    <AlertTriangle className="w-2.5 h-2.5" /> Negotiated rate not set
+                  </span>
+                )}
+              </div>
+              {!canMoveToSubmission && (
+                <p className="text-[8px] text-amber-500 mt-1">
+                  You must set the negotiated rate before moving to "Submission"
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Status Options */}
           <div>
@@ -134,20 +163,21 @@ export function StatusUpdateModal({
               {statusOrder.map((status, index) => {
                 const config = statusConfig[status];
                 const isPast = index < currentIndex;
-                const isCurrent = status === currentStatus;
+                const isCurrent = status === submission.status;
                 const isNext = index === currentIndex + 1;
+                const isSubmissionBlocked = status === 'submission' && !canMoveToSubmission && submission.status === 'applied';
                 
                 return (
                   <button
                     key={status}
-                    onClick={() => !isCurrent && setSelectedStatus(status)}
-                    disabled={isCurrent}
+                    onClick={() => !isCurrent && !isSubmissionBlocked && setSelectedStatus(status)}
+                    disabled={isCurrent || isSubmissionBlocked}
                     className={cn(
                       "w-full p-2 rounded-lg border text-left transition-all",
-                      isCurrent && "opacity-50 cursor-not-allowed bg-muted/20",
+                      (isCurrent || isSubmissionBlocked) && "opacity-50 cursor-not-allowed bg-muted/20",
                       selectedStatus === status && "ring-1 ring-primary",
-                      !isCurrent && "hover:bg-muted/30 cursor-pointer",
-                      isNext && "border-primary/50"
+                      !isCurrent && !isSubmissionBlocked && "hover:bg-muted/30 cursor-pointer",
+                      isNext && !isSubmissionBlocked && "border-primary/50"
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -166,6 +196,7 @@ export function StatusUpdateModal({
                             selectedStatus === status ? "text-primary" : "text-foreground"
                           )}>
                             {config.label}
+                            {isSubmissionBlocked && " (Rate Required)"}
                           </p>
                           <p className="text-[8px] text-muted-foreground">{config.description}</p>
                         </div>
@@ -200,7 +231,7 @@ export function StatusUpdateModal({
           </div>
 
           {/* Notes */}
-          {selectedStatus && (
+          {selectedStatus && !tryingToSubmitWithoutRate && (
             <div>
               <Label htmlFor="notes" className="text-[10px] text-muted-foreground">
                 Notes {selectedStatus === 'submission' && '(Rate confirmation details)'}
@@ -210,7 +241,7 @@ export function StatusUpdateModal({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder={selectedStatus === 'submission' 
-                  ? "e.g., Rate confirmed at $75/hr by vendor" 
+                  ? `Rate confirmed: $${submission.appliedRate} → $${submission.submissionRate}` 
                   : "Add optional notes..."
                 }
                 className="mt-1 h-16 text-[10px] resize-none"
@@ -226,7 +257,7 @@ export function StatusUpdateModal({
           <Button 
             size="sm" 
             onClick={handleSubmit} 
-            disabled={!selectedStatus}
+            disabled={!selectedStatus || tryingToSubmitWithoutRate}
             className="text-[10px]"
           >
             Update Status
