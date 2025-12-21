@@ -238,10 +238,14 @@ export const mockSubmissions: Submission[] = [
     jobTitle: 'Senior Java Developer',
     client: 'Fortune 500 Bank',
     submissionDate: '2024-01-15',
-    status: 'interview',
+    status: 'client_interview',
     rate: 75,
     interviewDate: '2024-01-18',
-    notes: 'Client very interested. Technical round scheduled.'
+    notes: 'Client very interested. Technical round scheduled.',
+    rateConfirmationDate: '2024-01-14',
+    statusChangedBy: 'Admin',
+    statusChangedDate: '2024-01-16T10:30:00',
+    statusHistory: []
   },
   {
     id: '2',
@@ -253,9 +257,12 @@ export const mockSubmissions: Submission[] = [
     jobTitle: 'React Frontend Engineer',
     client: 'Tech Startup',
     submissionDate: '2024-01-14',
-    status: 'screening',
+    status: 'applied',
     rate: 65,
-    notes: 'Resume under review with hiring manager.'
+    notes: 'Resume shared. Awaiting rate confirmation.',
+    statusChangedBy: 'Admin',
+    statusChangedDate: '2024-01-14T09:00:00',
+    statusHistory: []
   },
   {
     id: '3',
@@ -267,9 +274,13 @@ export const mockSubmissions: Submission[] = [
     jobTitle: 'ML Engineer - NLP',
     client: 'AI Research Company',
     submissionDate: '2024-01-13',
-    status: 'offer',
+    status: 'offer_letter',
     rate: 90,
-    offerDetails: '$90/hr C2C, 12 month contract'
+    offerDetails: '$90/hr C2C, 12 month contract',
+    rateConfirmationDate: '2024-01-12',
+    statusChangedBy: 'Admin',
+    statusChangedDate: '2024-01-17T16:00:00',
+    statusHistory: []
   },
   {
     id: '4',
@@ -281,10 +292,14 @@ export const mockSubmissions: Submission[] = [
     jobTitle: 'Salesforce Architect',
     client: 'Healthcare Provider',
     submissionDate: '2024-01-12',
-    status: 'interview',
+    status: 'interview_scheduled',
     rate: 80,
     interviewDate: '2024-01-17',
-    notes: 'Panel interview with 3 stakeholders.'
+    notes: 'Panel interview with 3 stakeholders.',
+    rateConfirmationDate: '2024-01-11',
+    statusChangedBy: 'Admin',
+    statusChangedDate: '2024-01-15T10:00:00',
+    statusHistory: []
   },
   {
     id: '5',
@@ -298,7 +313,11 @@ export const mockSubmissions: Submission[] = [
     submissionDate: '2024-01-10',
     status: 'placed',
     rate: 90,
-    offerDetails: 'Started 01/15. 18 month contract.'
+    offerDetails: 'Started 01/15. 18 month contract.',
+    rateConfirmationDate: '2024-01-08',
+    statusChangedBy: 'Admin',
+    statusChangedDate: '2024-01-15T08:00:00',
+    statusHistory: []
   }
 ];
 

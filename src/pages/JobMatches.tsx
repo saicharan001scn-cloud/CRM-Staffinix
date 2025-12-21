@@ -72,18 +72,18 @@ export default function JobMatches() {
         jobTitle: job.title,
         client: job.client,
         submissionDate: new Date().toISOString().split('T')[0],
-        status: 'submitted' as const,
+        status: 'applied' as const,
         rate: selectedMatch.consultant.rate,
         notes: tailoredConsultants.has(selectedMatch.consultant.id) 
-          ? 'Submitted with AI-tailored resume' 
-          : 'Submitted with original resume'
+          ? 'Resume shared with AI-tailored version. Awaiting rate confirmation.' 
+          : 'Resume shared with vendor. Awaiting rate confirmation.'
       };
       
       addSubmission(newSubmission);
       setSubmitModalOpen(false);
       
-      toast.success('Submission successful!', {
-        description: `${selectedMatch.consultant.name} submitted for ${job.title}.`
+      toast.success('Resume shared!', {
+        description: `${selectedMatch.consultant.name} added to pipeline as "Applied".`
       });
       
       navigate('/submissions');
