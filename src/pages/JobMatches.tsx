@@ -68,15 +68,19 @@ export default function JobMatches() {
         consultantName: selectedMatch.consultant.name,
         vendorId: '1',
         vendorName: 'TechStaff Solutions',
+        vendorContact: 'Vendor Rep',
         jobId: job.id,
         jobTitle: job.title,
         client: job.client,
         submissionDate: new Date().toISOString().split('T')[0],
         status: 'applied' as const,
+        appliedRate: selectedMatch.consultant.rate,
+        submissionRate: undefined,
         rate: selectedMatch.consultant.rate,
         notes: tailoredConsultants.has(selectedMatch.consultant.id) 
           ? 'Resume shared with AI-tailored version. Awaiting rate confirmation.' 
-          : 'Resume shared with vendor. Awaiting rate confirmation.'
+          : 'Resume shared with vendor. Awaiting rate confirmation.',
+        rateHistory: []
       };
       
       addSubmission(newSubmission);

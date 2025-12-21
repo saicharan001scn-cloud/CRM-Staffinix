@@ -239,13 +239,16 @@ export const mockSubmissions: Submission[] = [
     client: 'Fortune 500 Bank',
     submissionDate: '2024-01-15',
     status: 'client_interview',
+    appliedRate: 80,
+    submissionRate: 75,
     rate: 75,
     interviewDate: '2024-01-18',
     notes: 'Client very interested. Technical round scheduled.',
     rateConfirmationDate: '2024-01-14',
     statusChangedBy: 'Admin',
     statusChangedDate: '2024-01-16T10:30:00',
-    statusHistory: []
+    statusHistory: [],
+    rateHistory: []
   },
   {
     id: '2',
@@ -258,11 +261,14 @@ export const mockSubmissions: Submission[] = [
     client: 'Tech Startup',
     submissionDate: '2024-01-14',
     status: 'applied',
+    appliedRate: 65,
+    submissionRate: undefined,
     rate: 65,
     notes: 'Resume shared. Awaiting rate confirmation.',
     statusChangedBy: 'Admin',
     statusChangedDate: '2024-01-14T09:00:00',
-    statusHistory: []
+    statusHistory: [],
+    rateHistory: []
   },
   {
     id: '3',
@@ -275,12 +281,15 @@ export const mockSubmissions: Submission[] = [
     client: 'AI Research Company',
     submissionDate: '2024-01-13',
     status: 'offer_letter',
+    appliedRate: 95,
+    submissionRate: 90,
     rate: 90,
     offerDetails: '$90/hr C2C, 12 month contract',
     rateConfirmationDate: '2024-01-12',
     statusChangedBy: 'Admin',
     statusChangedDate: '2024-01-17T16:00:00',
-    statusHistory: []
+    statusHistory: [],
+    rateHistory: []
   },
   {
     id: '4',
@@ -293,13 +302,16 @@ export const mockSubmissions: Submission[] = [
     client: 'Healthcare Provider',
     submissionDate: '2024-01-12',
     status: 'interview_scheduled',
+    appliedRate: 85,
+    submissionRate: 80,
     rate: 80,
     interviewDate: '2024-01-17',
     notes: 'Panel interview with 3 stakeholders.',
     rateConfirmationDate: '2024-01-11',
     statusChangedBy: 'Admin',
     statusChangedDate: '2024-01-15T10:00:00',
-    statusHistory: []
+    statusHistory: [],
+    rateHistory: []
   },
   {
     id: '5',
@@ -312,12 +324,15 @@ export const mockSubmissions: Submission[] = [
     client: 'Insurance Company',
     submissionDate: '2024-01-10',
     status: 'placed',
+    appliedRate: 90,
+    submissionRate: 90,
     rate: 90,
     offerDetails: 'Started 01/15. 18 month contract.',
     rateConfirmationDate: '2024-01-08',
     statusChangedBy: 'Admin',
     statusChangedDate: '2024-01-15T08:00:00',
-    statusHistory: []
+    statusHistory: [],
+    rateHistory: []
   }
 ];
 

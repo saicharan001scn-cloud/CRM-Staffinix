@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Submission, SubmissionStatus } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, DollarSign, Building2, User, Briefcase, ChevronRight, History, Clock, Check } from 'lucide-react';
+import { Calendar, DollarSign, Building2, User, Briefcase, ChevronRight, History, Clock, Check, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StatusUpdateModal } from './StatusUpdateModal';
+import { RateUpdateModal } from './RateUpdateModal';
 import { useSubmissions } from '@/context/SubmissionsContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
@@ -81,11 +82,43 @@ function PipelineProgress({ currentStatus }: { currentStatus: SubmissionStatus }
   );
 }
 
+function RateDifferenceBadge({ appliedRate, submissionRate }: { appliedRate: number; submissionRate?: number }) {
+  if (!submissionRate) return <span className="text-[8px] text-muted-foreground">—</span>;
+  
+  const diff = submissionRate - appliedRate;
+  const percentage = appliedRate > 0 ? ((diff / appliedRate) * 100).toFixed(0) : '0';
+  
+  return (
+    <div className="flex items-center gap-0.5">
+      {diff > 0 && <TrendingUp className="w-2.5 h-2.5 text-success" />}
+      {diff < 0 && <TrendingDown className="w-2.5 h-2.5 text-destructive" />}
+      {diff === 0 && <Minus className="w-2.5 h-2.5 text-info" />}
+      <span className={cn(
+        "text-[9px] font-medium",
+        diff > 0 && "text-success",
+        diff < 0 && "text-destructive",
+        diff === 0 && "text-info"
+      )}>
+        {diff >= 0 ? '+' : ''}{diff}
+      </span>
+      <span className={cn(
+        "text-[8px] px-0.5 rounded",
+        diff > 0 && "bg-success/20 text-success",
+        diff < 0 && "bg-destructive/20 text-destructive",
+        diff === 0 && "bg-info/20 text-info"
+      )}>
+        ({percentage}%)
+      </span>
+    </div>
+  );
+}
+
 export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
-  const { updateStatus } = useSubmissions();
+  const { updateStatus, updateRate } = useSubmissions();
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showRateModal, setShowRateModal] = useState(false);
 
   const sortedSubmissions = [...submissions].sort((a, b) => 
     new Date(b.statusChangedDate || b.submissionDate).getTime() - 
@@ -95,6 +128,12 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
   const handleUpdateStatus = (newStatus: SubmissionStatus, notes?: string) => {
     if (selectedSubmission) {
       updateStatus(selectedSubmission.id, newStatus, notes);
+    }
+  };
+
+  const handleUpdateRate = (newRate: number, reason?: string, vendorContact?: string) => {
+    if (selectedSubmission) {
+      updateRate(selectedSubmission.id, newRate, reason, vendorContact);
     }
   };
 
@@ -117,16 +156,18 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
                 <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Consultant</th>
                 <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Job / Client</th>
                 <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Vendor</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Rate</th>
+                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Applied $</th>
+                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Submitted $</th>
+                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Diff</th>
                 <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Pipeline</th>
                 <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Status</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Last Updated</th>
                 <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
               {sortedSubmissions.map((submission, index) => {
                 const status = statusConfig[submission.status];
+                const canUpdateRate = submission.status === 'applied';
                 return (
                   <tr 
                     key={submission.id}
@@ -158,19 +199,51 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
                     <td className="p-2">
                       <div className="flex items-center gap-1">
                         <Building2 className="w-2.5 h-2.5 text-muted-foreground" />
-                        <span className="text-[10px] text-muted-foreground">{submission.vendorName}</span>
+                        <div>
+                          <span className="text-[10px] text-muted-foreground">{submission.vendorName}</span>
+                          {submission.vendorContact && (
+                            <p className="text-[8px] text-muted-foreground">{submission.vendorContact}</p>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="p-2">
                       <div className="flex items-center gap-0.5">
-                        <DollarSign className="w-2.5 h-2.5 text-success" />
-                        <span className="text-[10px] font-medium text-foreground">{submission.rate}/hr</span>
+                        <DollarSign className="w-2.5 h-2.5 text-warning" />
+                        <span className="text-[10px] font-medium text-warning">{submission.appliedRate}</span>
                       </div>
-                      {submission.rateConfirmationDate && (
-                        <p className="text-[7px] text-success mt-0.5">✓ Confirmed</p>
+                    </td>
+                    <td className="p-2">
+                      {submission.submissionRate ? (
+                        <div className="flex items-center gap-0.5">
+                          <DollarSign className="w-2.5 h-2.5 text-info" />
+                          <span className="text-[10px] font-medium text-info">{submission.submissionRate}</span>
+                          {submission.rateConfirmationDate && (
+                            <Check className="w-2 h-2 text-success" />
+                          )}
+                        </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-5 px-1 text-[8px] text-warning"
+                          onClick={() => {
+                            setSelectedSubmission(submission);
+                            setShowRateModal(true);
+                          }}
+                          disabled={!canUpdateRate}
+                        >
+                          + Set Rate
+                        </Button>
                       )}
                     </td>
-                    <td className="p-2 min-w-[140px]">
+                    <td className="p-2">
+                      <RateDifferenceBadge 
+                        appliedRate={submission.appliedRate} 
+                        submissionRate={submission.submissionRate} 
+                      />
+                    </td>
+                    <td className="p-2 min-w-[120px]">
                       <PipelineProgress currentStatus={submission.status} />
                     </td>
                     <td className="p-2">
@@ -185,22 +258,19 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
                     </td>
                     <td className="p-2">
                       <div className="flex items-center gap-1">
-                        <Clock className="w-2.5 h-2.5 text-muted-foreground" />
-                        <div>
-                          <p className="text-[9px] text-muted-foreground">
-                            {submission.statusChangedDate 
-                              ? formatDateTime(submission.statusChangedDate)
-                              : submission.submissionDate
-                            }
-                          </p>
-                          <p className="text-[7px] text-muted-foreground">
-                            by {submission.statusChangedBy || 'Admin'}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-1">
+                        {canUpdateRate && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-5 px-1.5 text-[8px] text-warning border-warning/30"
+                            onClick={() => {
+                              setSelectedSubmission(submission);
+                              setShowRateModal(true);
+                            }}
+                          >
+                            <DollarSign className="w-2 h-2 mr-0.5" />Rate
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="outline"
@@ -241,10 +311,21 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
             setShowStatusModal(false);
             setSelectedSubmission(null);
           }}
-          currentStatus={selectedSubmission.status}
-          consultantName={selectedSubmission.consultantName}
-          jobTitle={selectedSubmission.jobTitle}
+          submission={selectedSubmission}
           onUpdateStatus={handleUpdateStatus}
+        />
+      )}
+
+      {/* Rate Update Modal */}
+      {selectedSubmission && (
+        <RateUpdateModal
+          open={showRateModal}
+          onClose={() => {
+            setShowRateModal(false);
+            setSelectedSubmission(null);
+          }}
+          submission={selectedSubmission}
+          onUpdateRate={handleUpdateRate}
         />
       )}
 
@@ -252,7 +333,7 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
       <Dialog open={showHistoryModal} onOpenChange={() => setShowHistoryModal(false)}>
         <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-sm font-semibold text-foreground">Status History</DialogTitle>
+            <DialogTitle className="text-sm font-semibold text-foreground">History</DialogTitle>
             {selectedSubmission && (
               <p className="text-[10px] text-muted-foreground">
                 {selectedSubmission.consultantName} • {selectedSubmission.jobTitle}
@@ -260,46 +341,73 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
             )}
           </DialogHeader>
           
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {selectedSubmission?.statusHistory.map((entry, index) => (
-              <div 
-                key={entry.id} 
-                className="flex items-start gap-2 p-2 rounded-lg bg-muted/20 border border-border"
-              >
-                <div className={cn(
-                  "w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold mt-0.5",
-                  statusConfig[entry.toStatus].bgColor,
-                  "text-white"
-                )}>
-                  {index + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-1">
-                    {entry.fromStatus && (
-                      <>
-                        <Badge variant="outline" className="text-[8px] px-1 py-0">
-                          {statusConfig[entry.fromStatus].label}
+          <div className="space-y-3">
+            {/* Rate History */}
+            <div>
+              <p className="text-[10px] font-medium text-muted-foreground mb-1.5">Rate Changes</p>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {selectedSubmission?.rateHistory.slice().reverse().map((entry) => (
+                  <div key={entry.id} className="flex items-center justify-between p-1.5 bg-muted/20 rounded border border-border">
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[9px] text-foreground">
+                          {entry.oldRate ? `$${entry.oldRate} → ` : ''}${entry.newRate}/hr
+                        </span>
+                        <Badge className={cn(
+                          "text-[7px] px-1 py-0",
+                          entry.type === 'applied' ? 'bg-warning/20 text-warning' : 'bg-info/20 text-info'
+                        )}>
+                          {entry.type}
                         </Badge>
-                        <ChevronRight className="w-2 h-2 text-muted-foreground" />
-                      </>
-                    )}
-                    <Badge className={cn(
-                      "text-[8px] px-1 py-0",
-                      statusConfig[entry.toStatus].bgColor + '/20',
-                      statusConfig[entry.toStatus].color
-                    )}>
-                      {statusConfig[entry.toStatus].label}
-                    </Badge>
+                      </div>
+                      {entry.reason && <p className="text-[8px] text-muted-foreground italic">"{entry.reason}"</p>}
+                    </div>
+                    <span className="text-[8px] text-muted-foreground">{entry.changedBy}</span>
                   </div>
-                  <p className="text-[8px] text-muted-foreground mt-0.5">
-                    {formatDateTime(entry.changedDate)} by {entry.changedBy}
-                  </p>
-                  {entry.notes && (
-                    <p className="text-[9px] text-foreground mt-1 italic">"{entry.notes}"</p>
-                  )}
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Status History */}
+            <div>
+              <p className="text-[10px] font-medium text-muted-foreground mb-1.5">Status Changes</p>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {selectedSubmission?.statusHistory.slice().reverse().map((entry) => (
+                  <div key={entry.id} className="flex items-start gap-2 p-1.5 bg-muted/20 rounded border border-border">
+                    <div className={cn(
+                      "w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold mt-0.5",
+                      statusConfig[entry.toStatus].bgColor,
+                      "text-white"
+                    )}>
+                      ✓
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1">
+                        {entry.fromStatus && (
+                          <>
+                            <Badge variant="outline" className="text-[7px] px-1 py-0">
+                              {statusConfig[entry.fromStatus].label}
+                            </Badge>
+                            <ChevronRight className="w-2 h-2 text-muted-foreground" />
+                          </>
+                        )}
+                        <Badge className={cn(
+                          "text-[7px] px-1 py-0",
+                          statusConfig[entry.toStatus].bgColor + '/20',
+                          statusConfig[entry.toStatus].color
+                        )}>
+                          {statusConfig[entry.toStatus].label}
+                        </Badge>
+                      </div>
+                      <p className="text-[7px] text-muted-foreground">
+                        {formatDateTime(entry.changedDate)} by {entry.changedBy}
+                      </p>
+                      {entry.notes && <p className="text-[8px] text-foreground italic">"{entry.notes}"</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

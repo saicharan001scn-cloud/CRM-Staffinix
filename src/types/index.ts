@@ -30,18 +30,31 @@ export interface StatusHistoryEntry {
   notes?: string;
 }
 
+export interface RateHistoryEntry {
+  id: string;
+  oldRate: number | null;
+  newRate: number;
+  changedBy: string;
+  changedDate: string;
+  reason?: string;
+  type: 'applied' | 'negotiated';
+}
+
 export interface Submission {
   id: string;
   consultantId: string;
   consultantName: string;
   vendorId: string;
   vendorName: string;
+  vendorContact?: string;
   jobId: string;
   jobTitle: string;
   client: string;
   submissionDate: string;
   status: SubmissionStatus;
-  rate: number;
+  appliedRate: number;
+  submissionRate?: number;
+  rate: number; // Legacy field for compatibility
   notes?: string;
   interviewDate?: string;
   offerDetails?: string;
@@ -49,6 +62,7 @@ export interface Submission {
   statusChangedBy?: string;
   statusChangedDate?: string;
   statusHistory: StatusHistoryEntry[];
+  rateHistory: RateHistoryEntry[];
 }
 
 export interface Vendor {
