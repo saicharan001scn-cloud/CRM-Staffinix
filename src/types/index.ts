@@ -19,7 +19,16 @@ export interface Consultant {
   matchScore?: number;
 }
 
-export type SubmissionStatus = 'submitted' | 'screening' | 'interview' | 'offer' | 'placed' | 'rejected';
+export type SubmissionStatus = 'applied' | 'submission' | 'interview_scheduled' | 'client_interview' | 'offer_letter' | 'placed' | 'rejected';
+
+export interface StatusHistoryEntry {
+  id: string;
+  fromStatus: SubmissionStatus | null;
+  toStatus: SubmissionStatus;
+  changedBy: string;
+  changedDate: string;
+  notes?: string;
+}
 
 export interface Submission {
   id: string;
@@ -36,6 +45,10 @@ export interface Submission {
   notes?: string;
   interviewDate?: string;
   offerDetails?: string;
+  rateConfirmationDate?: string;
+  statusChangedBy?: string;
+  statusChangedDate?: string;
+  statusHistory: StatusHistoryEntry[];
 }
 
 export interface Vendor {
