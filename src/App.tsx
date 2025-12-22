@@ -16,6 +16,8 @@ import Emails from "./pages/Emails";
 import Analytics from "./pages/Analytics";
 import Assistant from "./pages/Assistant";
 import Settings from "./pages/Settings";
+import IntegrationsManagement from "./pages/IntegrationsManagement";
+import ApiKeysManagement from "./pages/ApiKeysManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +42,8 @@ const App = () => (
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/assistant" element={<Assistant />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/integrations" element={<IntegrationsManagement />} />
+            <Route path="/settings/api-keys" element={<ApiKeysManagement />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
