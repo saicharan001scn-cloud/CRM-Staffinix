@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { JobCard } from '@/components/jobs/JobCard';
+import { AddJobModal, NewJob } from '@/components/jobs/AddJobModal';
 import { mockJobs } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { RefreshCw, Sparkles, Search, X, Filter } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { RefreshCw, Sparkles, Search, X, Filter, Plus, Briefcase, CheckCircle, Users } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 const sourceColors: Record<string, string> = {
   Dice: 'bg-orange-500/20 text-orange-500 border-orange-500/30',
@@ -28,6 +31,8 @@ const allSources = ['Dice', 'LinkedIn', 'Indeed', 'Monster', 'CareerBuilder', 'V
 export default function Jobs() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  const [showAddJob, setShowAddJob] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'open' | 'filled'>('all');
   
   const filteredJobs = mockJobs.filter((job) => {
     const matchesSearch = searchQuery === '' || 
@@ -38,11 +43,16 @@ export default function Jobs() {
     
     const matchesSource = selectedSources.length === 0 || selectedSources.includes(job.source);
     
-    return matchesSearch && matchesSource;
+    const matchesStatus = activeFilter === 'all' || 
+      (activeFilter === 'open' && job.status === 'open') ||
+      (activeFilter === 'filled' && job.status === 'filled');
+    
+    return matchesSearch && matchesSource && matchesStatus;
   });
 
-  const openJobs = filteredJobs.filter(j => j.status === 'open').length;
-  const totalMatches = filteredJobs.reduce((acc, j) => acc + j.matchedConsultants, 0);
+  const openJobs = mockJobs.filter(j => j.status === 'open').length;
+  const filledJobs = mockJobs.filter(j => j.status === 'filled').length;
+  const totalMatches = mockJobs.reduce((acc, j) => acc + j.matchedConsultants, 0);
 
   const toggleSource = (source: string) => {
     setSelectedSources(prev => 
@@ -50,11 +60,16 @@ export default function Jobs() {
     );
   };
 
+  const handleAddJob = (job: NewJob) => {
+    console.log('New job:', job);
+    toast.success('Job added successfully!');
+  };
+
   return (
     <MainLayout
       title="Job Requirements"
       subtitle="Active job openings from all sources"
-      action={{ label: 'Fetch New Jobs', onClick: () => {} }}
+      action={{ label: 'Add New Job', onClick: () => setShowAddJob(true) }}
     >
       {/* Search Bar with Source Filter */}
       <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg mb-4">
@@ -99,32 +114,71 @@ export default function Jobs() {
         </span>
       </div>
 
-      {/* Quick Stats */}
-      <div className="flex items-center gap-6 mb-6 p-4 bg-card border border-border rounded-xl">
-        <div className="flex items-center gap-3">
-          <div className="w-3 h-3 rounded-full bg-success animate-pulse" />
-          <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{openJobs}</span> Open Jobs
-          </span>
+      {/* Quick Stats with Toggleable Filters */}
+      <TooltipProvider>
+        <div className="flex items-center gap-4 mb-6 p-4 bg-card border border-border rounded-xl">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={activeFilter === 'open' ? 'default' : 'ghost'}
+                size="sm"
+                className="gap-2"
+                onClick={() => setActiveFilter(activeFilter === 'open' ? 'all' : 'open')}
+              >
+                <Briefcase className="w-4 h-4" />
+                <span className="font-semibold">{openJobs}</span> Open Jobs
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Click to filter open jobs only</TooltipContent>
+          </Tooltip>
+
+          <div className="h-4 w-px bg-border" />
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+              >
+                <Users className="w-4 h-4 text-primary" />
+                <span className="font-semibold">{totalMatches}</span> Total Matches
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Total consultant matches across all jobs</TooltipContent>
+          </Tooltip>
+
+          <div className="h-4 w-px bg-border" />
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={activeFilter === 'filled' ? 'default' : 'ghost'}
+                size="sm"
+                className="gap-2"
+                onClick={() => setActiveFilter(activeFilter === 'filled' ? 'all' : 'filled')}
+              >
+                <CheckCircle className="w-4 h-4 text-success" />
+                <span className="font-semibold">{filledJobs}</span> Filled
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Click to filter filled positions only</TooltipContent>
+          </Tooltip>
+
+          <div className="h-4 w-px bg-border" />
+
+          <div className="flex flex-wrap gap-2">
+            {allSources.slice(0, 4).map(source => (
+              <Badge key={source} variant="outline" className={sourceColors[source] || ''}>{source}</Badge>
+            ))}
+          </div>
+
+          <Button variant="ghost" size="sm" className="ml-auto gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Sync Now
+          </Button>
         </div>
-        <div className="h-4 w-px bg-border" />
-        <div className="flex items-center gap-3">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{totalMatches}</span> Total Matches
-          </span>
-        </div>
-        <div className="h-4 w-px bg-border" />
-        <div className="flex flex-wrap gap-2">
-          {allSources.slice(0, 4).map(source => (
-            <Badge key={source} variant="outline" className={sourceColors[source] || ''}>{source}</Badge>
-          ))}
-        </div>
-        <Button variant="ghost" size="sm" className="ml-auto gap-2">
-          <RefreshCw className="w-4 h-4" />
-          Sync Now
-        </Button>
-      </div>
+      </TooltipProvider>
 
       {/* Jobs Grid */}
       <div className="grid grid-cols-2 gap-6">
@@ -138,6 +192,13 @@ export default function Jobs() {
           <p className="text-sm">No jobs found</p>
         </div>
       )}
+
+      {/* Add Job Modal */}
+      <AddJobModal
+        open={showAddJob}
+        onClose={() => setShowAddJob(false)}
+        onAdd={handleAddJob}
+      />
     </MainLayout>
   );
 }
