@@ -3,6 +3,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { SubmissionQueue } from '@/components/submissions/SubmissionQueue';
 import { useSubmissions } from '@/context/SubmissionsContext';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { SubmissionStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { 
@@ -13,7 +14,9 @@ import {
   FileCheck, 
   CheckCircle, 
   XCircle,
-  Filter
+  Filter,
+  Search,
+  X
 } from 'lucide-react';
 
 const pipelineStats: { 
@@ -35,21 +38,54 @@ const pipelineStats: {
 
 export default function Submissions() {
   const { submissions, statusFilter, setStatusFilter } = useSubmissions();
+  const [searchQuery, setSearchQuery] = useState('');
   
   const getCount = (status: SubmissionStatus | 'all') => {
     if (status === 'all') return submissions.length;
     return submissions.filter(s => s.status === status).length;
   };
 
-  const filteredSubmissions = statusFilter === 'all' 
-    ? submissions 
-    : submissions.filter(s => s.status === statusFilter);
+  const filteredSubmissions = submissions.filter(s => {
+    const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
+    const matchesSearch = searchQuery === '' ||
+      s.consultantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.vendorName.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <MainLayout
       title="Submission Tracker"
       subtitle="Track your candidate pipeline from Applied to Placed"
     >
+      {/* Search Bar */}
+      <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by consultant, job title, client, vendor..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9 text-sm bg-background"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+              onClick={() => setSearchQuery('')}
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          )}
+        </div>
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          Found <span className="font-semibold text-foreground">{filteredSubmissions.length}</span> submissions
+        </span>
+      </div>
+
       {/* Pipeline Stats / Filters */}
       <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-card border border-border rounded-xl">
         {pipelineStats.map((stat) => {
@@ -64,13 +100,13 @@ export default function Submissions() {
               size="sm"
               onClick={() => setStatusFilter(stat.status)}
               className={cn(
-                "h-7 px-2 gap-1.5 text-[10px] transition-all",
+                "h-8 px-3 gap-2 text-xs transition-all",
                 isActive && stat.bgColor,
                 isActive && "ring-1 ring-inset",
                 isActive && stat.status !== 'all' && `ring-current`
               )}
             >
-              <Icon className={cn("w-3 h-3", stat.color)} />
+              <Icon className={cn("w-4 h-4", stat.color)} />
               <span className={cn(
                 "font-medium",
                 isActive ? stat.color : "text-muted-foreground"
@@ -78,7 +114,7 @@ export default function Submissions() {
                 {stat.label}
               </span>
               <span className={cn(
-                "px-1 py-0.5 rounded text-[9px] font-semibold",
+                "px-1.5 py-0.5 rounded text-xs font-semibold",
                 isActive ? stat.bgColor : "bg-muted",
                 isActive ? stat.color : "text-muted-foreground"
               )}>
@@ -90,8 +126,8 @@ export default function Submissions() {
       </div>
 
       {/* Pipeline Visualization Header */}
-      <div className="flex items-center justify-between mb-4 p-3 bg-gradient-to-r from-warning/10 via-info/10 via-chart-5/10 via-primary/10 via-success/10 to-emerald-500/10 border border-border rounded-lg">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between mb-4 p-4 bg-gradient-to-r from-warning/10 via-info/10 via-chart-5/10 via-primary/10 via-success/10 to-emerald-500/10 border border-border rounded-lg">
+        <div className="flex items-center gap-2">
           {pipelineStats.slice(1, 7).map((stat, index) => {
             const Icon = stat.icon;
             const count = getCount(stat.status as SubmissionStatus);
@@ -99,24 +135,24 @@ export default function Submissions() {
               <div key={stat.status} className="flex items-center">
                 <div className="flex flex-col items-center">
                   <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center",
+                    "w-8 h-8 rounded-full flex items-center justify-center",
                     stat.bgColor
                   )}>
-                    <Icon className={cn("w-3 h-3", stat.color)} />
+                    <Icon className={cn("w-4 h-4", stat.color)} />
                   </div>
-                  <span className="text-[8px] text-muted-foreground mt-0.5">{stat.label}</span>
-                  <span className={cn("text-[10px] font-bold", stat.color)}>{count}</span>
+                  <span className="text-xs text-muted-foreground mt-1">{stat.label}</span>
+                  <span className={cn("text-sm font-bold", stat.color)}>{count}</span>
                 </div>
                 {index < 5 && (
-                  <div className="w-6 h-0.5 bg-border mx-1" />
+                  <div className="w-8 h-0.5 bg-border mx-2" />
                 )}
               </div>
             );
           })}
         </div>
         <div className="text-right">
-          <p className="text-[10px] text-muted-foreground">Conversion Rate</p>
-          <p className="text-sm font-bold text-foreground">
+          <p className="text-xs text-muted-foreground">Conversion Rate</p>
+          <p className="text-lg font-bold text-foreground">
             {submissions.length > 0 
               ? ((getCount('placed') / submissions.length) * 100).toFixed(0) 
               : 0}%
@@ -126,6 +162,12 @@ export default function Submissions() {
 
       {/* Queue Table */}
       <SubmissionQueue submissions={filteredSubmissions} />
+
+      {filteredSubmissions.length === 0 && searchQuery && (
+        <div className="text-center py-12 text-muted-foreground">
+          <p className="text-sm">No submissions found matching "{searchQuery}"</p>
+        </div>
+      )}
     </MainLayout>
   );
 }

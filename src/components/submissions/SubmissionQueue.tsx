@@ -37,17 +37,17 @@ function PipelineProgress({ currentStatus }: { currentStatus: SubmissionStatus }
 
   if (isRejected) {
     return (
-      <div className="flex items-center gap-0.5">
-        <div className="w-full h-1 bg-destructive/30 rounded-full">
+      <div className="flex items-center gap-1">
+        <div className="w-full h-1.5 bg-destructive/30 rounded-full">
           <div className="h-full bg-destructive rounded-full w-full" />
         </div>
-        <span className="text-[8px] text-destructive ml-1">Rejected</span>
+        <span className="text-xs text-destructive ml-1">Rejected</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-1">
       {pipelineStages.map((stage, index) => {
         const stageStep = statusConfig[stage].step;
         const isCompleted = stageStep < currentStep;
@@ -58,19 +58,19 @@ function PipelineProgress({ currentStatus }: { currentStatus: SubmissionStatus }
           <div key={stage} className="flex items-center">
             <div 
               className={cn(
-                "w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold transition-all",
+                "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all",
                 isCompleted && `${config.bgColor} text-white`,
-                isCurrent && `${config.bgColor} text-white ring-1 ring-offset-1 ring-offset-background`,
+                isCurrent && `${config.bgColor} text-white ring-2 ring-offset-1 ring-offset-background`,
                 !isCompleted && !isCurrent && "bg-muted/30 text-muted-foreground"
               )}
               title={config.label}
             >
-              {isCompleted ? <Check className="w-2 h-2" /> : stageStep}
+              {isCompleted ? <Check className="w-3 h-3" /> : stageStep}
             </div>
             {index < pipelineStages.length - 1 && (
               <div 
                 className={cn(
-                  "w-3 h-0.5 mx-0.5",
+                  "w-4 h-1 mx-0.5",
                   isCompleted ? config.bgColor : "bg-muted/30"
                 )} 
               />
@@ -83,18 +83,18 @@ function PipelineProgress({ currentStatus }: { currentStatus: SubmissionStatus }
 }
 
 function RateDifferenceBadge({ appliedRate, submissionRate }: { appliedRate: number; submissionRate?: number }) {
-  if (!submissionRate) return <span className="text-[8px] text-muted-foreground">—</span>;
+  if (!submissionRate) return <span className="text-xs text-muted-foreground">—</span>;
   
   const diff = submissionRate - appliedRate;
   const percentage = appliedRate > 0 ? ((diff / appliedRate) * 100).toFixed(0) : '0';
   
   return (
-    <div className="flex items-center gap-0.5">
-      {diff > 0 && <TrendingUp className="w-2.5 h-2.5 text-success" />}
-      {diff < 0 && <TrendingDown className="w-2.5 h-2.5 text-destructive" />}
-      {diff === 0 && <Minus className="w-2.5 h-2.5 text-info" />}
+    <div className="flex items-center gap-1">
+      {diff > 0 && <TrendingUp className="w-4 h-4 text-success" />}
+      {diff < 0 && <TrendingDown className="w-4 h-4 text-destructive" />}
+      {diff === 0 && <Minus className="w-4 h-4 text-info" />}
       <span className={cn(
-        "text-[9px] font-medium",
+        "text-xs font-semibold",
         diff > 0 && "text-success",
         diff < 0 && "text-destructive",
         diff === 0 && "text-info"
@@ -102,7 +102,7 @@ function RateDifferenceBadge({ appliedRate, submissionRate }: { appliedRate: num
         {diff >= 0 ? '+' : ''}{diff}
       </span>
       <span className={cn(
-        "text-[8px] px-0.5 rounded",
+        "text-xs px-1 py-0.5 rounded",
         diff > 0 && "bg-success/20 text-success",
         diff < 0 && "bg-destructive/20 text-destructive",
         diff === 0 && "bg-info/20 text-info"
@@ -152,16 +152,16 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground w-8">#</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Consultant</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Job / Client</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Vendor</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Applied $</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Submitted $</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Diff</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Pipeline</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Status</th>
-                <th className="text-left p-2 text-[10px] font-medium text-muted-foreground">Actions</th>
+                <th className="text-left p-3 text-sm font-semibold text-muted-foreground w-10">#</th>
+                <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Consultant</th>
+                <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Job / Client</th>
+                <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Vendor</th>
+                <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Applied $</th>
+                <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Submitted $</th>
+                <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Diff</th>
+                <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Pipeline</th>
+                <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Status</th>
+                <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -171,62 +171,62 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
                 return (
                   <tr 
                     key={submission.id}
-                    className="table-row-hover border-b border-border last:border-0 animate-fade-in opacity-0"
+                    className="table-row-hover border-b border-border last:border-0 animate-fade-in opacity-0 hover:bg-muted/30 transition-colors"
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
                   >
-                    <td className="p-2">
-                      <span className="text-[9px] text-muted-foreground font-mono">
+                    <td className="p-3">
+                      <span className="text-xs text-muted-foreground font-mono">
                         #{(index + 1).toString().padStart(2, '0')}
                       </span>
                     </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                          <User className="w-2.5 h-2.5 text-primary" />
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                          <User className="w-4 h-4 text-primary" />
                         </div>
-                        <span className="text-[10px] font-medium text-foreground">{submission.consultantName}</span>
+                        <span className="text-sm font-semibold text-foreground">{submission.consultantName}</span>
                       </div>
                     </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-1">
-                        <Briefcase className="w-2.5 h-2.5 text-muted-foreground" />
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-muted-foreground" />
                         <div>
-                          <p className="text-[10px] text-foreground">{submission.jobTitle}</p>
-                          <p className="text-[8px] text-muted-foreground">{submission.client}</p>
+                          <p className="text-sm font-medium text-foreground">{submission.jobTitle}</p>
+                          <p className="text-xs text-muted-foreground">{submission.client}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-1">
-                        <Building2 className="w-2.5 h-2.5 text-muted-foreground" />
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-muted-foreground" />
                         <div>
-                          <span className="text-[10px] text-muted-foreground">{submission.vendorName}</span>
+                          <span className="text-sm text-muted-foreground">{submission.vendorName}</span>
                           {submission.vendorContact && (
-                            <p className="text-[8px] text-muted-foreground">{submission.vendorContact}</p>
+                            <p className="text-xs text-muted-foreground">{submission.vendorContact}</p>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-0.5">
-                        <DollarSign className="w-2.5 h-2.5 text-warning" />
-                        <span className="text-[10px] font-medium text-warning">{submission.appliedRate}</span>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="w-4 h-4 text-warning" />
+                        <span className="text-sm font-bold text-warning">{submission.appliedRate}</span>
                       </div>
                     </td>
-                    <td className="p-2">
+                    <td className="p-3">
                       {submission.submissionRate ? (
-                        <div className="flex items-center gap-0.5">
-                          <DollarSign className="w-2.5 h-2.5 text-info" />
-                          <span className="text-[10px] font-medium text-info">{submission.submissionRate}</span>
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-4 h-4 text-info" />
+                          <span className="text-sm font-bold text-info">{submission.submissionRate}</span>
                           {submission.rateConfirmationDate && (
-                            <Check className="w-2 h-2 text-success" />
+                            <Check className="w-4 h-4 text-success" />
                           )}
                         </div>
                       ) : (
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-5 px-1 text-[8px] text-warning"
+                          className="h-7 px-2 text-xs text-warning"
                           onClick={() => {
                             setSelectedSubmission(submission);
                             setShowRateModal(true);
@@ -237,18 +237,18 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
                         </Button>
                       )}
                     </td>
-                    <td className="p-2">
+                    <td className="p-3">
                       <RateDifferenceBadge 
                         appliedRate={submission.appliedRate} 
                         submissionRate={submission.submissionRate} 
                       />
                     </td>
-                    <td className="p-2 min-w-[120px]">
+                    <td className="p-3 min-w-[140px]">
                       <PipelineProgress currentStatus={submission.status} />
                     </td>
-                    <td className="p-2">
+                    <td className="p-3">
                       <Badge className={cn(
-                        "border text-[9px] px-1.5 py-0",
+                        "border text-xs px-2 py-1",
                         status.bgColor + '/20',
                         status.color,
                         'border-current/30'
@@ -256,42 +256,42 @@ export function SubmissionQueue({ submissions }: SubmissionQueueProps) {
                         {status.label}
                       </Badge>
                     </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-1">
+                    <td className="p-3">
+                      <div className="flex items-center gap-1.5">
                         {canUpdateRate && (
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-5 px-1.5 text-[8px] text-warning border-warning/30"
+                            className="h-7 px-2 text-xs text-warning border-warning/30"
                             onClick={() => {
                               setSelectedSubmission(submission);
                               setShowRateModal(true);
                             }}
                           >
-                            <DollarSign className="w-2 h-2 mr-0.5" />Rate
+                            <DollarSign className="w-3 h-3 mr-1" />Rate
                           </Button>
                         )}
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-5 px-1.5 text-[8px]"
+                          className="h-7 px-2 text-xs"
                           onClick={() => {
                             setSelectedSubmission(submission);
                             setShowStatusModal(true);
                           }}
                         >
-                          Update <ChevronRight className="w-2 h-2 ml-0.5" />
+                          Update <ChevronRight className="w-3 h-3 ml-1" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-5 w-5 p-0"
+                          className="h-7 w-7 p-0"
                           onClick={() => {
                             setSelectedSubmission(submission);
                             setShowHistoryModal(true);
                           }}
                         >
-                          <History className="w-2.5 h-2.5" />
+                          <History className="w-4 h-4" />
                         </Button>
                       </div>
                     </td>
