@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,8 @@ import {
   Database,
   Key,
   Globe,
-  Zap
+  Zap,
+  ChevronRight
 } from 'lucide-react';
 
 const integrations = [
@@ -25,6 +27,8 @@ const integrations = [
 ];
 
 export default function Settings() {
+  const navigate = useNavigate();
+
   return (
     <MainLayout
       title="Settings"
@@ -111,12 +115,18 @@ export default function Settings() {
 
         {/* Right Column */}
         <div className="space-y-4">
-          {/* Integrations */}
-          <Card className="p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" />
-              Integrations
-            </h3>
+          {/* Integrations - Now Clickable */}
+          <Card 
+            className="p-4 cursor-pointer hover:border-primary/50 transition-colors group"
+            onClick={() => navigate('/settings/integrations')}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Zap className="w-4 h-4 text-primary" />
+                Integrations
+              </h3>
+              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
             <div className="space-y-2">
               {integrations.map((integration) => (
                 <div 
@@ -143,12 +153,18 @@ export default function Settings() {
             </Button>
           </Card>
 
-          {/* API Keys */}
-          <Card className="p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Key className="w-4 h-4 text-primary" />
-              API Keys
-            </h3>
+          {/* API Keys - Now Clickable */}
+          <Card 
+            className="p-4 cursor-pointer hover:border-primary/50 transition-colors group"
+            onClick={() => navigate('/settings/api-keys')}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Key className="w-4 h-4 text-primary" />
+                API Keys
+              </h3>
+              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
             <div className="space-y-2">
               <div className="p-2 bg-muted/50 rounded-lg">
                 <p className="text-xs font-medium text-foreground">Production Key</p>
@@ -160,7 +176,7 @@ export default function Settings() {
               </div>
             </div>
             <Button variant="outline" size="sm" className="w-full mt-3 h-7 text-xs">
-              Generate New Key
+              Manage API Keys
             </Button>
           </Card>
 

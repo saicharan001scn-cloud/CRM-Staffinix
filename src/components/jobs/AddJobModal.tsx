@@ -21,7 +21,12 @@ export interface NewJob {
   title: string;
   location: string;
   workType: 'Remote' | 'Onsite' | 'Hybrid';
-  client: string;
+  vendorCompanyName: string;
+  implementationPartner: string;
+  endClientName: string;
+  vendorContactEmail: string;
+  vendorContactPhone: string;
+  vendorContactPerson: string;
   minRate: number;
   maxRate: number;
   description: string;
@@ -37,6 +42,7 @@ export interface NewJob {
 const sourceOptions = ['LinkedIn', 'Dice', 'Indeed', 'Monster', 'CareerBuilder', 'Vendor Email', 'Referral', 'Direct Client', 'Talent.com', 'Other'];
 const visaOptions = ['US Citizen', 'Green Card', 'H1B', 'OPT', 'CPT', 'L1', 'L2', 'TN', 'Any'];
 const commonSkills = ['Java', 'Python', 'React', 'Angular', 'Node.js', 'AWS', 'Azure', 'DevOps', 'Salesforce', 'SAP', '.NET', 'SQL', 'TypeScript', 'Kubernetes', 'Docker'];
+const vendorSuggestions = ['TekSystems', 'Robert Half', 'Insight Global', 'Apex Systems', 'Randstad', 'Modis'];
 const clientSuggestions = ['TechCorp', 'FinanceHub', 'HealthTech Inc', 'RetailMax', 'AutoDrive Systems', 'CloudNet Solutions'];
 
 export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
@@ -44,7 +50,12 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
     title: '',
     location: '',
     workType: 'Remote',
-    client: '',
+    vendorCompanyName: '',
+    implementationPartner: '',
+    endClientName: '',
+    vendorContactEmail: '',
+    vendorContactPhone: '+1 ',
+    vendorContactPerson: '',
     minRate: 0,
     maxRate: 0,
     description: '',
@@ -64,7 +75,15 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
     const newErrors: Record<string, string> = {};
     if (!formData.title.trim()) newErrors.title = 'Job role is required';
     if (!formData.location.trim()) newErrors.location = 'Location is required';
-    if (!formData.client.trim()) newErrors.client = 'Company name is required';
+    if (!formData.vendorCompanyName.trim()) newErrors.vendorCompanyName = 'Vendor company name is required';
+    if (!formData.endClientName.trim()) newErrors.endClientName = 'End client name is required';
+    if (!formData.vendorContactEmail.trim()) newErrors.vendorContactEmail = 'Vendor contact email is required';
+    if (formData.vendorContactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.vendorContactEmail)) {
+      newErrors.vendorContactEmail = 'Invalid email format';
+    }
+    if (!formData.vendorContactPhone.trim() || formData.vendorContactPhone === '+1 ') {
+      newErrors.vendorContactPhone = 'Vendor contact phone is required';
+    }
     if (!formData.minRate || formData.minRate <= 0) newErrors.minRate = 'Min rate is required';
     if (!formData.maxRate || formData.maxRate < formData.minRate) newErrors.maxRate = 'Max rate must be >= min rate';
     if (!formData.description.trim()) newErrors.description = 'Job description is required';
@@ -79,7 +98,7 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
     
     onAdd(formData);
     toast.success('Job added!', {
-      description: `${formData.title} at ${formData.client} has been added.`
+      description: `${formData.title} at ${formData.endClientName} (via ${formData.vendorCompanyName}) has been added.`
     });
     
     if (saveAndAdd) {
@@ -95,7 +114,12 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
       title: '',
       location: '',
       workType: 'Remote',
-      client: '',
+      vendorCompanyName: '',
+      implementationPartner: '',
+      endClientName: '',
+      vendorContactEmail: '',
+      vendorContactPhone: '+1 ',
+      vendorContactPerson: '',
       minRate: 0,
       maxRate: 0,
       description: '',
@@ -195,21 +219,104 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
             </div>
           </div>
 
-          {/* Company */}
-          <div>
-            <Label htmlFor="client" className="text-xs">Company Name *</Label>
-            <Input
-              id="client"
-              value={formData.client}
-              onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-              placeholder="Client company name"
-              className={errors.client ? 'border-destructive' : ''}
-              list="client-suggestions"
-            />
-            <datalist id="client-suggestions">
-              {clientSuggestions.map(c => <option key={c} value={c} />)}
-            </datalist>
-            {errors.client && <p className="text-[10px] text-destructive mt-0.5">{errors.client}</p>}
+          {/* Client Chain Section */}
+          <div className="border border-border rounded-lg p-4 space-y-3">
+            <h4 className="text-xs font-semibold text-foreground -mt-1">Client Chain</h4>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="vendorCompanyName" className="text-xs flex items-center gap-1">
+                  Vendor Company Name *
+                  <span className="text-muted-foreground text-[10px]" title="The staffing vendor company we're working with">(ℹ️)</span>
+                </Label>
+                <Input
+                  id="vendorCompanyName"
+                  value={formData.vendorCompanyName}
+                  onChange={(e) => setFormData({ ...formData, vendorCompanyName: e.target.value })}
+                  placeholder="e.g., TekSystems"
+                  className={errors.vendorCompanyName ? 'border-destructive' : ''}
+                  list="vendor-suggestions"
+                />
+                <datalist id="vendor-suggestions">
+                  {vendorSuggestions.map(v => <option key={v} value={v} />)}
+                </datalist>
+                {errors.vendorCompanyName && <p className="text-[10px] text-destructive mt-0.5">{errors.vendorCompanyName}</p>}
+              </div>
+              
+              <div>
+                <Label htmlFor="implementationPartner" className="text-xs flex items-center gap-1">
+                  Implementation Partner
+                  <span className="text-muted-foreground text-[10px]" title="The implementation/delivery partner (if different from vendor)">(ℹ️)</span>
+                </Label>
+                <Input
+                  id="implementationPartner"
+                  value={formData.implementationPartner}
+                  onChange={(e) => setFormData({ ...formData, implementationPartner: e.target.value })}
+                  placeholder="Optional - e.g., Accenture"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="endClientName" className="text-xs flex items-center gap-1">
+                End Client / Final Client *
+                <span className="text-muted-foreground text-[10px]" title="The final company where consultant will work">(ℹ️)</span>
+              </Label>
+              <Input
+                id="endClientName"
+                value={formData.endClientName}
+                onChange={(e) => setFormData({ ...formData, endClientName: e.target.value })}
+                placeholder="e.g., Bank of America"
+                className={errors.endClientName ? 'border-destructive' : ''}
+                list="client-suggestions"
+              />
+              <datalist id="client-suggestions">
+                {clientSuggestions.map(c => <option key={c} value={c} />)}
+              </datalist>
+              {errors.endClientName && <p className="text-[10px] text-destructive mt-0.5">{errors.endClientName}</p>}
+            </div>
+          </div>
+
+          {/* Vendor Contact Details Section */}
+          <div className="border border-border rounded-lg p-4 space-y-3">
+            <h4 className="text-xs font-semibold text-foreground -mt-1">Vendor Contact Details</h4>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="vendorContactEmail" className="text-xs">Vendor Contact Email *</Label>
+                <Input
+                  id="vendorContactEmail"
+                  type="email"
+                  value={formData.vendorContactEmail}
+                  onChange={(e) => setFormData({ ...formData, vendorContactEmail: e.target.value })}
+                  placeholder="vendor@company.com"
+                  className={errors.vendorContactEmail ? 'border-destructive' : ''}
+                />
+                {errors.vendorContactEmail && <p className="text-[10px] text-destructive mt-0.5">{errors.vendorContactEmail}</p>}
+              </div>
+              
+              <div>
+                <Label htmlFor="vendorContactPhone" className="text-xs">Vendor Contact Phone *</Label>
+                <Input
+                  id="vendorContactPhone"
+                  value={formData.vendorContactPhone}
+                  onChange={(e) => setFormData({ ...formData, vendorContactPhone: e.target.value })}
+                  placeholder="+1 555-123-4567"
+                  className={errors.vendorContactPhone ? 'border-destructive' : ''}
+                />
+                {errors.vendorContactPhone && <p className="text-[10px] text-destructive mt-0.5">{errors.vendorContactPhone}</p>}
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="vendorContactPerson" className="text-xs">Vendor Contact Person Name</Label>
+              <Input
+                id="vendorContactPerson"
+                value={formData.vendorContactPerson}
+                onChange={(e) => setFormData({ ...formData, vendorContactPerson: e.target.value })}
+                placeholder="John Smith"
+              />
+            </div>
           </div>
 
           {/* Rate Range */}
