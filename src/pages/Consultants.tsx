@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ConsultantTable } from '@/components/consultants/ConsultantTable';
 import { ConsultantFilters } from '@/components/consultants/ConsultantFilters';
+import { AddConsultantModal, NewConsultant } from '@/components/consultants/AddConsultantModal';
 import { mockConsultants } from '@/data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -40,9 +41,11 @@ export default function Consultants() {
   const [visaFilter, setVisaFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
+  const [consultants, setConsultants] = useState(mockConsultants);
 
-  const filteredConsultants = mockConsultants.filter((consultant) => {
+  const filteredConsultants = consultants.filter((consultant) => {
     const matchesStatus = statusFilter === 'all' || consultant.status === statusFilter;
     const matchesVisa = visaFilter === 'all' || consultant.visaStatus === visaFilter;
     const matchesSearch = searchQuery === '' || 
@@ -70,11 +73,28 @@ export default function Consultants() {
     toast.error(`Delete ${consultant.name} - Coming soon`);
   };
 
+  const handleAddConsultant = (newConsultant: NewConsultant) => {
+    const consultant: Consultant = {
+      id: String(consultants.length + 1),
+      name: `${newConsultant.firstName} ${newConsultant.lastName}`,
+      email: newConsultant.email || '',
+      phone: newConsultant.phone || '',
+      visaStatus: newConsultant.visaStatus,
+      skills: newConsultant.skills,
+      rate: newConsultant.rate,
+      status: newConsultant.status,
+      location: newConsultant.location,
+      experience: 0,
+      lastUpdated: new Date().toISOString().split('T')[0],
+    };
+    setConsultants([consultant, ...consultants]);
+  };
+
   return (
     <MainLayout
       title="Consultants"
-      subtitle={`Manage your ${mockConsultants.length} consultants`}
-      action={{ label: 'Add Consultant', onClick: () => {} }}
+      subtitle={`Manage your ${consultants.length} consultants`}
+      action={{ label: 'Add Consultant', onClick: () => setAddModalOpen(true) }}
     >
       <Tabs defaultValue="table" className="space-y-4">
         <div className="flex flex-col gap-3">
@@ -265,6 +285,13 @@ export default function Consultants() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Consultant Modal */}
+      <AddConsultantModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onAdd={handleAddConsultant}
+      />
     </MainLayout>
   );
 }
