@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { MatchedConsultantCard } from '@/components/jobs/MatchedConsultantCard';
-import { TailorResumeModal } from '@/components/jobs/TailorResumeModal';
+import { EnhancedTailorResumeModal } from '@/components/jobs/EnhancedTailorResumeModal';
 import { SubmitConfirmModal } from '@/components/jobs/SubmitConfirmModal';
 import { mockJobs } from '@/data/mockData';
 import { mockJobMatches, JobMatch } from '@/data/mockJobMatches';
@@ -227,7 +227,7 @@ export default function JobMatches() {
       {/* Modals */}
       {selectedMatch && (
         <>
-          <TailorResumeModal
+          <EnhancedTailorResumeModal
             open={tailorModalOpen}
             onClose={() => setTailorModalOpen(false)}
             onApprove={handleApproveResume}

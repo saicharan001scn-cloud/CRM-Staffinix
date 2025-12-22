@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
@@ -5,6 +6,7 @@ import { SubmissionChart } from '@/components/dashboard/SubmissionChart';
 import { SkillDemandChart } from '@/components/dashboard/SkillDemandChart';
 import { TopConsultants } from '@/components/dashboard/TopConsultants';
 import { HotJobs } from '@/components/dashboard/HotJobs';
+import { AddConsultantModal, NewConsultant } from '@/components/consultants/AddConsultantModal';
 import { 
   mockDashboardStats, 
   mockActivities, 
@@ -14,13 +16,21 @@ import {
   skillDemandData 
 } from '@/data/mockData';
 import { Users, Briefcase, Send, Calendar, Building2, Sparkles, Target } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Dashboard() {
+  const [showAddConsultant, setShowAddConsultant] = useState(false);
+
+  const handleAddConsultant = (consultant: NewConsultant) => {
+    console.log('New consultant:', consultant);
+    toast.success('Consultant added successfully!');
+  };
+
   return (
     <MainLayout 
       title="Dashboard" 
       subtitle="Overview of your staffing operations"
-      action={{ label: 'Add Consultant', onClick: () => {} }}
+      action={{ label: 'Add Consultant', onClick: () => setShowAddConsultant(true) }}
     >
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-4 mb-6">
@@ -102,6 +112,13 @@ export default function Dashboard() {
         </div>
         <ActivityFeed activities={mockActivities} />
       </div>
+
+      {/* Add Consultant Modal */}
+      <AddConsultantModal
+        open={showAddConsultant}
+        onClose={() => setShowAddConsultant(false)}
+        onAdd={handleAddConsultant}
+      />
     </MainLayout>
   );
 }
