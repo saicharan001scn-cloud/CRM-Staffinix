@@ -4,24 +4,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { 
-  Link2, 
-  Mail, 
-  Globe,
-  Calendar,
-  Database,
-  Video,
-  Cloud,
-  RefreshCw,
-  Settings,
-  CheckCircle,
-  XCircle,
-  Search,
-  Plus,
-  ExternalLink
+  Link2, Mail, Globe, Calendar, Database, Video, Cloud, RefreshCw,
+  Settings, CheckCircle, XCircle, Search, Plus, ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { RequestIntegrationModal } from '@/components/integrations/RequestIntegrationModal';
+import { ConfigureIntegrationModal } from '@/components/integrations/ConfigureIntegrationModal';
 
 interface Integration {
   id: string;
@@ -52,6 +41,9 @@ export default function IntegrationsManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [integrationList, setIntegrationList] = useState(integrations);
   const [isTesting, setIsTesting] = useState<string | null>(null);
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [configureModalOpen, setConfigureModalOpen] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
 
   const filteredIntegrations = integrationList.filter(i => 
     i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -81,6 +73,11 @@ export default function IntegrationsManagement() {
     toast.success('Connection test successful!');
   };
 
+  const handleConfigure = (integration: Integration) => {
+    setSelectedIntegration(integration);
+    setConfigureModalOpen(true);
+  };
+
   const getStatusBadge = (status: Integration['status']) => {
     switch (status) {
       case 'connected':
@@ -93,53 +90,29 @@ export default function IntegrationsManagement() {
   };
 
   return (
-    <MainLayout
-      title="Manage Integrations"
-      subtitle="Connect and configure external services"
-    >
+    <MainLayout title="Manage Integrations" subtitle="Connect and configure external services">
       <div className="space-y-6">
-        {/* Header Actions */}
         <div className="flex items-center justify-between">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search integrations..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+            <Input placeholder="Search integrations..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setRequestModalOpen(true)}>
             <Plus className="w-4 h-4" />
             Request New Integration
           </Button>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-4 gap-4">
-          <Card className="p-4">
-            <p className="text-xs text-muted-foreground">Total Integrations</p>
-            <p className="text-2xl font-bold text-foreground">{integrationList.length}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-xs text-muted-foreground">Connected</p>
-            <p className="text-2xl font-bold text-success">{integrationList.filter(i => i.status === 'connected').length}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-xs text-muted-foreground">Pending</p>
-            <p className="text-2xl font-bold text-warning">{integrationList.filter(i => i.status === 'pending').length}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-xs text-muted-foreground">Disconnected</p>
-            <p className="text-2xl font-bold text-muted-foreground">{integrationList.filter(i => i.status === 'disconnected').length}</p>
-          </Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground">Total</p><p className="text-2xl font-bold text-foreground">{integrationList.length}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground">Connected</p><p className="text-2xl font-bold text-success">{integrationList.filter(i => i.status === 'connected').length}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground">Pending</p><p className="text-2xl font-bold text-warning">{integrationList.filter(i => i.status === 'pending').length}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground">Disconnected</p><p className="text-2xl font-bold text-muted-foreground">{integrationList.filter(i => i.status === 'disconnected').length}</p></Card>
         </div>
 
-        {/* Integrations by Category */}
         {categories.map(category => {
           const categoryIntegrations = filteredIntegrations.filter(i => i.category === category);
           if (categoryIntegrations.length === 0) return null;
-
           return (
             <div key={category}>
               <h3 className="text-sm font-semibold text-foreground mb-3">{category}</h3>
@@ -154,52 +127,28 @@ export default function IntegrationsManagement() {
                         <div>
                           <h4 className="text-sm font-medium text-foreground">{integration.name}</h4>
                           <p className="text-xs text-muted-foreground mt-0.5">{integration.description}</p>
-                          {integration.lastSynced && (
-                            <p className="text-[10px] text-muted-foreground mt-1">
-                              Last synced: {integration.lastSynced}
-                            </p>
-                          )}
+                          {integration.lastSynced && <p className="text-[10px] text-muted-foreground mt-1">Last synced: {integration.lastSynced}</p>}
                         </div>
                       </div>
                       {getStatusBadge(integration.status)}
                     </div>
-                    
                     <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border">
                       {integration.status === 'connected' ? (
                         <>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="flex-1 h-7 text-xs gap-1"
-                            onClick={() => handleTestConnection(integration.id)}
-                            disabled={isTesting === integration.id}
-                          >
-                            {isTesting === integration.id ? (
-                              <RefreshCw className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <RefreshCw className="w-3 h-3" />
-                            )}
+                          <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleTestConnection(integration.id)} disabled={isTesting === integration.id}>
+                            {isTesting === integration.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
                             Test
                           </Button>
-                          <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1">
+                          <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleConfigure(integration)}>
                             <Settings className="w-3 h-3" />
                             Configure
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 text-xs text-destructive hover:text-destructive"
-                            onClick={() => handleDisconnect(integration.id)}
-                          >
+                          <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => handleDisconnect(integration.id)}>
                             Disconnect
                           </Button>
                         </>
                       ) : (
-                        <Button 
-                          size="sm" 
-                          className="flex-1 h-7 text-xs gap-1"
-                          onClick={() => handleConnect(integration.id)}
-                        >
+                        <Button size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleConnect(integration.id)}>
                           <ExternalLink className="w-3 h-3" />
                           Connect
                         </Button>
@@ -212,6 +161,11 @@ export default function IntegrationsManagement() {
           );
         })}
       </div>
+
+      <RequestIntegrationModal open={requestModalOpen} onClose={() => setRequestModalOpen(false)} />
+      {selectedIntegration && (
+        <ConfigureIntegrationModal open={configureModalOpen} onClose={() => setConfigureModalOpen(false)} integration={selectedIntegration} />
+      )}
     </MainLayout>
   );
 }
