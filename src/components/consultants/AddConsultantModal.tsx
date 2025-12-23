@@ -38,12 +38,13 @@ export interface NewConsultant {
 }
 
 const visaOptions: VisaStatus[] = ['USC', 'GC', 'H1B', 'OPT', 'CPT', 'L1', 'L2', 'H4 EAD', 'TN'];
-const statusOptions: { value: ConsultantStatus; label: string }[] = [
+const statusOptions: { value: ConsultantStatus | 'others'; label: string }[] = [
   { value: 'available', label: 'Available' },
   { value: 'bench', label: 'Bench' },
   { value: 'marketing', label: 'Marketing' },
   { value: 'interview', label: 'Interview' },
   { value: 'placed', label: 'Placed' },
+  { value: 'others', label: 'Others' },
 ];
 
 const commonSkills = ['Java', 'Python', 'React', 'Angular', 'Node.js', 'AWS', 'Azure', 'DevOps', 'Salesforce', 'SAP', '.NET', 'SQL'];

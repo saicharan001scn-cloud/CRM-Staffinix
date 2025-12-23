@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { VendorTable } from '@/components/vendors/VendorTable';
+import { AddVendorModal, NewVendor } from '@/components/vendors/AddVendorModal';
+import { ImportVendorModal } from '@/components/vendors/ImportVendorModal';
 import { mockVendors } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Building2, Trophy, Mail, Search, X } from 'lucide-react';
+import { TrendingUp, Building2, Trophy, Mail, Search, X, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Vendors() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAddVendor, setShowAddVendor] = useState(false);
+  const [showImportVendor, setShowImportVendor] = useState(false);
   
   const filteredVendors = mockVendors.filter((vendor) => {
     if (searchQuery === '') return true;
@@ -23,11 +28,21 @@ export default function Vendors() {
   const totalSubmissions = filteredVendors.reduce((acc, v) => acc + v.totalSubmissions, 0);
   const totalPlacements = filteredVendors.reduce((acc, v) => acc + v.placements, 0);
 
+  const handleAddVendor = (vendor: NewVendor) => {
+    console.log('New vendor:', vendor);
+    // In real app, would add to database
+  };
+
+  const handleImportVendors = (vendors: any[]) => {
+    console.log('Imported vendors:', vendors);
+    toast.success(`${vendors.length} vendors imported successfully!`);
+  };
+
   return (
     <MainLayout
       title="Vendors"
       subtitle="Manage your vendor relationships"
-      action={{ label: 'Add Vendor', onClick: () => {} }}
+      action={{ label: 'Add Vendor', onClick: () => setShowAddVendor(true) }}
     >
       {/* Search Bar */}
       <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg mb-4">
@@ -45,6 +60,10 @@ export default function Vendors() {
             </Button>
           )}
         </div>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowImportVendor(true)}>
+          <Upload className="w-4 h-4" />
+          Import Vendor List
+        </Button>
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           Found <span className="font-semibold text-foreground">{filteredVendors.length}</span> vendors
         </span>
@@ -97,6 +116,18 @@ export default function Vendors() {
 
       {/* Vendors Table */}
       <VendorTable vendors={filteredVendors} />
+
+      {/* Modals */}
+      <AddVendorModal
+        open={showAddVendor}
+        onClose={() => setShowAddVendor(false)}
+        onAdd={handleAddVendor}
+      />
+      <ImportVendorModal
+        open={showImportVendor}
+        onClose={() => setShowImportVendor(false)}
+        onImport={handleImportVendors}
+      />
     </MainLayout>
   );
 }
