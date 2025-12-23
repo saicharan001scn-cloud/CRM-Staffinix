@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { mockConsultants } from '@/data/mockData';
+import { PerformanceAnalytics } from '@/components/consultants/PerformanceAnalytics';
 import { 
   ArrowLeft, 
   Mail, 
@@ -334,6 +335,9 @@ export default function ConsultantProfile() {
           </Card>
         </div>
       </div>
+
+      {/* Performance Analytics Section */}
+      <PerformanceAnalytics consultantId={consultantId || ''} />
 
       {/* Upload Resume Modal */}
       <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
