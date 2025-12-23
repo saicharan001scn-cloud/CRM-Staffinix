@@ -35,6 +35,7 @@ export default function Emails() {
       title="Email Automation"
       subtitle="AI-powered email campaigns and automation"
       action={{ label: 'New Campaign', onClick: () => {} }}
+      showBackButton={false}
     >
       <div className="grid grid-cols-3 gap-6">
         {/* Left Column - Compose */}

@@ -6,6 +6,7 @@ export default function Assistant() {
     <MainLayout
       title="AI Assistant"
       subtitle="Your intelligent staffing co-pilot"
+      showBackButton={false}
     >
       <AIAssistant />
     </MainLayout>

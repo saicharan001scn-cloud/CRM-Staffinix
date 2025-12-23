@@ -74,7 +74,7 @@ export function Sidebar() {
                 collapsed && "justify-center px-0"
               )}
             >
-              <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-primary")} />
+              <item.icon className={cn("w-5 h-5 shrink-0 nav-icon transition-transform", isActive && "text-primary")} />
               {!collapsed && <span>{item.label}</span>}
             </Link>
           );
@@ -91,7 +91,7 @@ export function Sidebar() {
             collapsed && "justify-center px-0"
           )}
         >
-          <Settings className="w-5 h-5 shrink-0" />
+          <Settings className="w-5 h-5 shrink-0 nav-icon transition-transform" />
           {!collapsed && <span>Settings</span>}
         </Link>
       </div>

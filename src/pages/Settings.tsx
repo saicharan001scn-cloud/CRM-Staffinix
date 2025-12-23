@@ -46,7 +46,7 @@ export default function Settings() {
   };
 
   return (
-    <MainLayout title="Settings" subtitle="Manage your account and preferences">
+    <MainLayout title="Settings" subtitle="Manage your account and preferences" showBackButton={false}>
       <div className="grid grid-cols-3 gap-4">
         <div className="col-span-2 space-y-4">
           <Card className="p-4">

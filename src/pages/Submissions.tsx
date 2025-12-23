@@ -59,6 +59,7 @@ export default function Submissions() {
     <MainLayout
       title="Submission Tracker"
       subtitle="Track your candidate pipeline from Applied to Placed"
+      showBackButton={false}
     >
       {/* Search Bar */}
       <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg mb-4">

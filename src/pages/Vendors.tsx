@@ -43,6 +43,7 @@ export default function Vendors() {
       title="Vendors"
       subtitle="Manage your vendor relationships"
       action={{ label: 'Add Vendor', onClick: () => setShowAddVendor(true) }}
+      showBackButton={false}
     >
       {/* Search Bar */}
       <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg mb-4">

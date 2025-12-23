@@ -95,6 +95,7 @@ export default function Consultants() {
       title="Consultants"
       subtitle={`Manage your ${consultants.length} consultants`}
       action={{ label: 'Add Consultant', onClick: () => setAddModalOpen(true) }}
+      showBackButton={false}
     >
       <Tabs defaultValue="table" className="space-y-4">
         <div className="flex flex-col gap-3">
