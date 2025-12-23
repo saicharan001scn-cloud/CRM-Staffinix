@@ -32,7 +32,19 @@ export default function Jobs() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [showAddJob, setShowAddJob] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'open' | 'filled'>('all');
+  const [activeFilters, setActiveFilters] = useState<Set<'open' | 'filled'>>(new Set());
+
+  const toggleStatusFilter = (status: 'open' | 'filled') => {
+    setActiveFilters(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(status)) {
+        newSet.delete(status);
+      } else {
+        newSet.add(status);
+      }
+      return newSet;
+    });
+  };
   
   const filteredJobs = mockJobs.filter((job) => {
     const matchesSearch = searchQuery === '' || 
@@ -43,9 +55,7 @@ export default function Jobs() {
     
     const matchesSource = selectedSources.length === 0 || selectedSources.includes(job.source);
     
-    const matchesStatus = activeFilter === 'all' || 
-      (activeFilter === 'open' && job.status === 'open') ||
-      (activeFilter === 'filled' && job.status === 'filled');
+    const matchesStatus = activeFilters.size === 0 || activeFilters.has(job.status as 'open' | 'filled');
     
     return matchesSearch && matchesSource && matchesStatus;
   });
@@ -120,16 +130,16 @@ export default function Jobs() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={activeFilter === 'open' ? 'default' : 'ghost'}
+                variant={activeFilters.has('open') ? 'default' : 'ghost'}
                 size="sm"
                 className="gap-2"
-                onClick={() => setActiveFilter(activeFilter === 'open' ? 'all' : 'open')}
+                onClick={() => toggleStatusFilter('open')}
               >
                 <Briefcase className="w-4 h-4" />
                 <span className="font-semibold">{openJobs}</span> Open Jobs
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Click to filter open jobs only</TooltipContent>
+            <TooltipContent>Click to toggle open jobs filter</TooltipContent>
           </Tooltip>
 
           <div className="h-4 w-px bg-border" />
@@ -139,7 +149,7 @@ export default function Jobs() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-2"
+                className="gap-2 cursor-default"
               >
                 <Users className="w-4 h-4 text-primary" />
                 <span className="font-semibold">{totalMatches}</span> Total Matches
@@ -153,16 +163,16 @@ export default function Jobs() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={activeFilter === 'filled' ? 'default' : 'ghost'}
+                variant={activeFilters.has('filled') ? 'default' : 'ghost'}
                 size="sm"
                 className="gap-2"
-                onClick={() => setActiveFilter(activeFilter === 'filled' ? 'all' : 'filled')}
+                onClick={() => toggleStatusFilter('filled')}
               >
                 <CheckCircle className="w-4 h-4 text-success" />
                 <span className="font-semibold">{filledJobs}</span> Filled
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Click to filter filled positions only</TooltipContent>
+            <TooltipContent>Click to toggle filled positions filter</TooltipContent>
           </Tooltip>
 
           <div className="h-4 w-px bg-border" />

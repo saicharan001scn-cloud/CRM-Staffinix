@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Consultant } from '@/types';
 import { cn } from '@/lib/utils';
 import { TrendingUp } from 'lucide-react';
@@ -7,9 +8,15 @@ interface TopConsultantsProps {
 }
 
 export function TopConsultants({ consultants }: TopConsultantsProps) {
+  const navigate = useNavigate();
+  
   const topConsultants = [...consultants]
     .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
     .slice(0, 5);
+
+  const handleConsultantClick = (consultantId: string) => {
+    navigate(`/consultants/${consultantId}`);
+  };
 
   return (
     <div className="bg-card border border-border rounded-xl p-6">
@@ -22,13 +29,14 @@ export function TopConsultants({ consultants }: TopConsultantsProps) {
         {topConsultants.map((consultant, index) => (
           <div 
             key={consultant.id}
-            className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+            onClick={() => handleConsultantClick(consultant.id)}
+            className="flex items-center gap-4 p-3 rounded-lg hover:bg-primary/10 hover:border-primary/30 border border-transparent transition-all cursor-pointer group"
           >
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium text-primary">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
               {index + 1}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{consultant.name}</p>
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{consultant.name}</p>
               <p className="text-xs text-muted-foreground truncate">
                 {consultant.skills.slice(0, 3).join(' • ')}
               </p>

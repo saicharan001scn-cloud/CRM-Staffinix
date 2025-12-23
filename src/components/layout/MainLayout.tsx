@@ -1,8 +1,10 @@
 import { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
-import { Bell, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlobalSearch } from './GlobalSearch';
+import { NotificationDropdown } from './NotificationDropdown';
+import { BackButton } from './BackButton';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -12,9 +14,10 @@ interface MainLayoutProps {
     label: string;
     onClick: () => void;
   };
+  showBackButton?: boolean;
 }
 
-export function MainLayout({ children, title, subtitle, action }: MainLayoutProps) {
+export function MainLayout({ children, title, subtitle, action, showBackButton = true }: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -29,10 +32,7 @@ export function MainLayout({ children, title, subtitle, action }: MainLayoutProp
 
             {/* Actions */}
             <div className="flex items-center gap-4">
-              <button className="relative p-2 rounded-lg hover:bg-secondary transition-colors">
-                <Bell className="w-5 h-5 text-muted-foreground" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full" />
-              </button>
+              <NotificationDropdown />
               
               {action && (
                 <Button onClick={action.onClick} className="gap-2">
@@ -46,8 +46,13 @@ export function MainLayout({ children, title, subtitle, action }: MainLayoutProp
 
         {/* Page Content */}
         <main className="p-6">
-          {/* Page Title */}
+          {/* Back Button & Page Title */}
           <div className="mb-8">
+            {showBackButton && (
+              <div className="mb-2">
+                <BackButton />
+              </div>
+            )}
             <h1 className="text-3xl font-bold text-foreground">{title}</h1>
             {subtitle && (
               <p className="mt-1 text-muted-foreground">{subtitle}</p>
