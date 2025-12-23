@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Users, Briefcase, Send, DollarSign } from 'lucide-react';
+import { TeamPerformance } from '@/components/analytics/TeamPerformance';
 
 const submissionTrend = [
   { name: 'Week 1', value: 45 },
@@ -41,6 +42,7 @@ export default function Analytics() {
     <MainLayout
       title="Analytics"
       subtitle="Insights and performance metrics"
+      showBackButton={false}
     >
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-6 mb-8">
@@ -210,6 +212,11 @@ export default function Analytics() {
             ))}
           </div>
         </Card>
+      </div>
+
+      {/* Team Performance Section */}
+      <div className="mt-6">
+        <TeamPerformance />
       </div>
     </MainLayout>
   );

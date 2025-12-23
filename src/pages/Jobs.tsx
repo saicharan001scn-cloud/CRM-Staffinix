@@ -80,6 +80,7 @@ export default function Jobs() {
       title="Job Requirements"
       subtitle="Active job openings from all sources"
       action={{ label: 'Add New Job', onClick: () => setShowAddJob(true) }}
+      showBackButton={false}
     >
       {/* Search Bar with Source Filter */}
       <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg mb-4">

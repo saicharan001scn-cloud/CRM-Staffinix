@@ -31,6 +31,7 @@ export default function Dashboard() {
       title="Dashboard" 
       subtitle="Overview of your staffing operations"
       action={{ label: 'Add Consultant', onClick: () => setShowAddConsultant(true) }}
+      showBackButton={false}
     >
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-4 mb-6">

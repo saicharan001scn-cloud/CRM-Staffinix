@@ -159,6 +159,16 @@
     @apply bg-primary/10 text-primary border-l-2 border-primary;
   }
 
+  /* Light mode specific navigation styling */
+  .light .nav-link-active {
+    @apply bg-[#E3F2FD] border-l-[3px] border-[#1976D2] font-semibold;
+  }
+
+  .light .nav-link-active .nav-icon {
+    @apply scale-110;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  }
+
   .badge-status {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
