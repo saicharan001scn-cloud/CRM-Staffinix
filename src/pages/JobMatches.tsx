@@ -100,13 +100,13 @@ export default function JobMatches() {
       subtitle={`AI-matched candidates for ${job.title}`}
     >
       <Button 
-        onClick={() => navigate(`/jobs/${jobId}`)} 
+        onClick={() => navigate('/jobs')} 
         variant="ghost" 
         size="sm" 
         className="mb-4 gap-2 text-xs"
       >
         <ArrowLeft className="w-3 h-3" />
-        Back to Job Details
+        Back to Jobs
       </Button>
 
       {/* Job Header with Full JD */}
