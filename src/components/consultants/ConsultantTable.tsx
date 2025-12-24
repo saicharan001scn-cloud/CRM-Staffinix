@@ -12,13 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { ResumeViewer } from './ResumeViewer';
 
 interface ConsultantTableProps {
   consultants: Consultant[];
@@ -34,7 +29,7 @@ const statusColors: Record<string, string> = {
 
 export function ConsultantTable({ consultants }: ConsultantTableProps) {
   const navigate = useNavigate();
-  const [resumeModalOpen, setResumeModalOpen] = useState(false);
+  const [resumeViewerOpen, setResumeViewerOpen] = useState(false);
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
 
   const handleViewProfile = (consultant: Consultant) => {
@@ -43,7 +38,7 @@ export function ConsultantTable({ consultants }: ConsultantTableProps) {
 
   const handleViewResume = (consultant: Consultant) => {
     setSelectedConsultant(consultant);
-    setResumeModalOpen(true);
+    setResumeViewerOpen(true);
   };
 
   const handleEdit = (consultant: Consultant) => {
@@ -180,38 +175,12 @@ export function ConsultantTable({ consultants }: ConsultantTableProps) {
         </div>
       </div>
 
-      {/* Resume Modal */}
-      <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-sm">
-              {selectedConsultant?.name} - Resume
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4 bg-muted/30 rounded-lg min-h-[400px]">
-            <div className="text-xs text-muted-foreground space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">{selectedConsultant?.name}</h3>
-              <p>{selectedConsultant?.email} | {selectedConsultant?.phone}</p>
-              <p>{selectedConsultant?.location}</p>
-              
-              <div className="pt-3 border-t border-border">
-                <h4 className="font-medium text-foreground mb-1">Professional Summary</h4>
-                <p>{selectedConsultant?.aiSummary}</p>
-              </div>
-              
-              <div className="pt-3 border-t border-border">
-                <h4 className="font-medium text-foreground mb-1">Skills</h4>
-                <p>{selectedConsultant?.skills.join(', ')}</p>
-              </div>
-              
-              <div className="pt-3 border-t border-border">
-                <h4 className="font-medium text-foreground mb-1">Experience</h4>
-                <p>{selectedConsultant?.experience} years of professional experience</p>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Resume Viewer */}
+      <ResumeViewer
+        open={resumeViewerOpen}
+        onClose={() => setResumeViewerOpen(false)}
+        consultant={selectedConsultant}
+      />
     </>
   );
 }
