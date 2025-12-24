@@ -344,6 +344,17 @@ Your Company`;
             consultantName={selectedMatch.consultant.name}
             jobTitle={job.title}
             clientName={job.client}
+            sourceType={job.sourceType}
+            vendorName={job.vendorName}
+            vendorEmail={job.vendorEmail}
+            jobId={job.id}
+            consultantId={selectedMatch.consultant.id}
+            consultantRate={selectedMatch.consultant.rate}
+            consultantSkills={selectedMatch.consultant.skills}
+            consultantVisaStatus={selectedMatch.consultant.visaStatus}
+            consultantLocation={selectedMatch.consultant.location}
+            consultantExperience={selectedMatch.consultant.experience}
+            isTailored={tailoredConsultants.has(selectedMatch.consultant.id)}
           />
           <SubmitConfirmModal
             open={submitModalOpen}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +11,7 @@ import {
   Target, Zap, Edit2, History, Save, Copy, Send, RotateCcw, 
   FileDown, Clock, ChevronDown, Check, Maximize2, Minimize2,
   Bold, Italic, List, Type, Undo, Redo, Eye, Bot, User,
-  Star, GitCompare, ChevronRight, Mail
+  Star, GitCompare, ChevronRight, Mail, AlertCircle, Loader2
 } from 'lucide-react';
 import { mockOriginalResume, mockTailoredResume } from '@/data/mockJobMatches';
 import { toast } from 'sonner';
@@ -31,7 +32,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { SendToVendorModal } from './SendToVendorModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useSubmissions } from '@/context/SubmissionsContext';
 
 interface EnhancedTailorResumeModalProps {
   open: boolean;
@@ -40,6 +51,18 @@ interface EnhancedTailorResumeModalProps {
   consultantName: string;
   jobTitle: string;
   clientName?: string;
+  // New props for vendor submission workflow
+  sourceType?: 'portal' | 'vendor_email';
+  vendorName?: string;
+  vendorEmail?: string;
+  jobId?: string;
+  consultantId?: string;
+  consultantRate?: number;
+  consultantSkills?: string[];
+  consultantVisaStatus?: string;
+  consultantLocation?: string;
+  consultantExperience?: number;
+  isTailored?: boolean;
 }
 type RegenerationOption = 'keywords' | 'ats' | 'experience' | 'custom';
 
@@ -61,8 +84,22 @@ export function EnhancedTailorResumeModal({
   onApprove, 
   consultantName, 
   jobTitle,
-  clientName = 'Client Company'
+  clientName = 'Client Company',
+  sourceType = 'vendor_email',
+  vendorName = 'Vendor',
+  vendorEmail = '',
+  jobId = '',
+  consultantId = '',
+  consultantRate = 0,
+  consultantSkills = [],
+  consultantVisaStatus = 'US Citizen',
+  consultantLocation = 'Remote',
+  consultantExperience = 5,
+  isTailored = false
 }: EnhancedTailorResumeModalProps) {
+  const navigate = useNavigate();
+  const { addSubmission, submissions } = useSubmissions();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [editedResume, setEditedResume] = useState(mockTailoredResume);
@@ -71,6 +108,9 @@ export function EnhancedTailorResumeModal({
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'draft'>('saved');
   const [compareVersionId, setCompareVersionId] = useState<string | null>(null);
   const [expandedVersions, setExpandedVersions] = useState<string[]>(['1']);
+  const [showMarkSubmittedConfirm, setShowMarkSubmittedConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'applied' | 'submitted'>('idle');
   
   const [versions, setVersions] = useState<ResumeVersion[]>([
     { 
@@ -94,7 +134,153 @@ export function EnhancedTailorResumeModal({
     }
   ]);
   const [selectedVersionId, setSelectedVersionId] = useState('1');
-  const [sendToVendorOpen, setSendToVendorOpen] = useState(false);
+
+  // Check if already submitted
+  const existingSubmission = submissions.find(
+    s => s.consultantId === consultantId && s.jobId === jobId
+  );
+
+  // Generate email template
+  const generateVendorEmailTemplate = () => {
+    return `Dear ${vendorName || 'Team'},
+
+Please find below candidate submission for the ${jobTitle} position at ${clientName}:
+
+CANDIDATE DETAILS:
+• Name: ${consultantName}
+• Experience: ${consultantExperience} years
+• Key Skills: ${consultantSkills.join(', ')}
+• Visa Status: ${consultantVisaStatus}
+• Rate Expectation: $${consultantRate}/hour
+• Availability: Immediately
+• Location: ${consultantLocation}
+
+RESUME:
+Attached is ${consultantName.split(' ')[0]}'s ${isTailored ? 'tailored ' : ''}resume specifically for this ${jobTitle} role.
+
+SUBMISSION NOTES:
+This candidate is well-matched for the position requirements with a strong background in the required technologies.
+
+NEXT STEPS:
+Please let us know when ${consultantName.split(' ')[0]}'s profile is submitted to ${clientName} and share any feedback or interview schedules.
+
+Best regards,
+
+Your Name
+Recruiting Team
+Your Company`;
+  };
+
+  // Handle "Send to Vendor" - Immediate status update + email redirect
+  const handleSendToVendor = async () => {
+    if (existingSubmission) {
+      toast.error('Already Submitted', {
+        description: `${consultantName} is already submitted for this position.`
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // 1. IMMEDIATELY create submission with "Applied" status
+    const submissionId = `sub-${Date.now()}`;
+    const newSubmission = {
+      id: submissionId,
+      consultantId: consultantId,
+      consultantName: consultantName,
+      vendorId: vendorName || '',
+      vendorName: vendorName || 'Vendor',
+      vendorContact: vendorEmail || '',
+      jobId: jobId,
+      jobTitle: jobTitle,
+      client: clientName,
+      submissionDate: new Date().toISOString().split('T')[0],
+      status: 'applied' as const,
+      appliedRate: consultantRate,
+      submissionRate: undefined,
+      rate: consultantRate,
+      notes: `Applied to ${vendorName}. Email pending. ${isTailored ? 'AI-tailored resume used.' : ''}`,
+      rateHistory: []
+    };
+
+    addSubmission(newSubmission);
+    setSubmissionStatus('applied');
+
+    // 2. Store email data for Email Automation
+    const emailData = {
+      to: vendorEmail || '',
+      subject: `Candidate Submission: ${consultantName} for ${jobTitle} at ${clientName}`,
+      body: generateVendorEmailTemplate(),
+      attachments: [`${consultantName.replace(/\s+/g, '_')}_Resume${isTailored ? '_Tailored' : ''}.pdf`],
+      vendorName: vendorName || 'Vendor',
+      candidateName: consultantName,
+      jobTitle: jobTitle,
+      clientName: clientName,
+      submissionId: submissionId,
+      status: 'applied'
+    };
+
+    sessionStorage.setItem('emailData', JSON.stringify(emailData));
+
+    // 3. Show success with visual feedback
+    toast.success('✅ Status Updated: APPLIED', {
+      description: `${consultantName}'s submission created. Redirecting to email automation...`
+    });
+
+    // 4. Wait briefly for visual feedback, then redirect
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onClose();
+      navigate('/emails?source=vendor_submission&status=applied');
+    }, 1500);
+  };
+
+  // Handle "Mark as Submitted" - Direct submission without email
+  const handleMarkAsSubmitted = async () => {
+    if (existingSubmission) {
+      toast.error('Already Submitted', {
+        description: `${consultantName} is already submitted for this position.`
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Create submission with "submission" status (submitted to vendor)
+    const submissionId = `sub-${Date.now()}`;
+    const newSubmission = {
+      id: submissionId,
+      consultantId: consultantId,
+      consultantName: consultantName,
+      vendorId: vendorName || '',
+      vendorName: vendorName || 'Vendor',
+      vendorContact: vendorEmail || '',
+      jobId: jobId,
+      jobTitle: jobTitle,
+      client: clientName,
+      submissionDate: new Date().toISOString().split('T')[0],
+      status: 'submission' as const,
+      appliedRate: consultantRate,
+      submissionRate: consultantRate,
+      rate: consultantRate,
+      notes: `Marked as submitted (verbal/phone). ${isTailored ? 'AI-tailored resume used.' : ''}`,
+      rateHistory: []
+    };
+
+    addSubmission(newSubmission);
+    setSubmissionStatus('submitted');
+
+    toast.success('✅ Candidate Marked as Submitted!', {
+      description: `${consultantName} submitted to ${vendorName}. Method: Verbal/Phone.`
+    });
+
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setShowMarkSubmittedConfirm(false);
+      onApprove();
+      navigate('/submissions');
+    }, 1500);
+  };
 
   // Auto-save effect
   useEffect(() => {
@@ -203,14 +389,6 @@ export function EnhancedTailorResumeModal({
     toast.success('Resume copied to clipboard!');
   };
 
-  const handleSendToVendor = () => {
-    setSendToVendorOpen(true);
-  };
-
-  const handleMarkAsSubmitted = () => {
-    toast.success('Marked as submitted!', { description: 'Updated submission tracker.' });
-    onApprove();
-  };
 
   const restoreVersion = (version: ResumeVersion) => {
     setEditedResume(version.content);
@@ -702,6 +880,20 @@ export function EnhancedTailorResumeModal({
                 Save & Actions
               </h4>
               
+              {/* Status Badge */}
+              {(existingSubmission || submissionStatus !== 'idle') && (
+                <div className="mb-3 p-2 bg-primary/10 border border-primary/20 rounded-lg">
+                  <div className="flex items-center gap-2 text-xs">
+                    <CheckCircle className="w-3.5 h-3.5 text-primary" />
+                    <span className="font-medium text-primary">
+                      {existingSubmission 
+                        ? `Already ${existingSubmission.status === 'applied' ? 'Applied' : 'Submitted'}`
+                        : submissionStatus === 'applied' ? 'Status: APPLIED' : 'Status: SUBMITTED'}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-1.5">
                   <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => handleSaveVersion(false)}>
@@ -714,28 +906,103 @@ export function EnhancedTailorResumeModal({
                   </Button>
                 </div>
                 
-                <Button variant="outline" size="sm" className="w-full h-8 text-xs gap-1" onClick={handleSendToVendor}>
-                  <Mail className="w-3.5 h-3.5" />
-                  Send to Vendor
+                {/* Send to Vendor Button */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full h-8 text-xs gap-1" 
+                  onClick={handleSendToVendor}
+                  disabled={isSubmitting || !!existingSubmission}
+                >
+                  {isSubmitting && submissionStatus === 'idle' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Mail className="w-3.5 h-3.5" />
+                  )}
+                  {existingSubmission ? 'Already Submitted' : 'Send to Vendor'}
                 </Button>
                 
-                <Button variant="default" size="sm" className="w-full h-8 text-xs gap-1" onClick={handleMarkAsSubmitted}>
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  Mark as Submitted
+                {/* Mark as Submitted Button */}
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="w-full h-8 text-xs gap-1" 
+                  onClick={() => setShowMarkSubmittedConfirm(true)}
+                  disabled={isSubmitting || !!existingSubmission}
+                >
+                  {isSubmitting && submissionStatus !== 'idle' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-3.5 h-3.5" />
+                  )}
+                  {existingSubmission ? 'Already Submitted' : 'Mark as Submitted'}
                 </Button>
+
+                {existingSubmission && (
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    Submitted on {existingSubmission.submissionDate}
+                  </p>
+                )}
               </div>
             </Card>
           </div>
         </div>
 
-        {/* Send to Vendor Modal */}
-        <SendToVendorModal
-          open={sendToVendorOpen}
-          onClose={() => setSendToVendorOpen(false)}
-          consultantName={consultantName}
-          jobTitle={jobTitle}
-          clientName={clientName}
-        />
+        {/* Mark as Submitted Confirmation Dialog */}
+        <AlertDialog open={showMarkSubmittedConfirm} onOpenChange={setShowMarkSubmittedConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-primary" />
+                Mark as Submitted
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3">
+                  <p>Mark <span className="font-medium text-foreground">{consultantName}</span> as submitted for:</p>
+                  
+                  <div className="p-3 bg-muted rounded-lg space-y-1 text-sm">
+                    <p><span className="text-muted-foreground">Job:</span> <span className="text-foreground">{jobTitle} at {clientName}</span></p>
+                    <p><span className="text-muted-foreground">Vendor:</span> <span className="text-foreground">{vendorName}</span></p>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <p className="flex items-center gap-2 text-success">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Update status to "Submitted to Vendor"
+                    </p>
+                    <p className="flex items-center gap-2 text-success">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Create submission record
+                    </p>
+                    <p className="flex items-center gap-2 text-success">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Skip email automation
+                    </p>
+                    <p className="flex items-center gap-2 text-muted-foreground">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      Log as verbal/phone submission
+                    </p>
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleMarkAsSubmitted}
+                disabled={isSubmitting}
+                className="gap-2"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="w-4 h-4" />
+                )}
+                Confirm & Mark Submitted
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
