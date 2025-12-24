@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Consultants from "./pages/Consultants";
 import ConsultantProfile from "./pages/ConsultantProfile";
 import Jobs from "./pages/Jobs";
+import JobDetails from "./pages/JobDetails";
 import JobMatches from "./pages/JobMatches";
 import Vendors from "./pages/Vendors";
 import Submissions from "./pages/Submissions";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/consultants" element={<Consultants />} />
             <Route path="/consultants/:consultantId" element={<ConsultantProfile />} />
             <Route path="/jobs" element={<Jobs />} />
+            <Route path="/jobs/:jobId" element={<JobDetails />} />
             <Route path="/jobs/:jobId/matches" element={<JobMatches />} />
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/submissions" element={<Submissions />} />

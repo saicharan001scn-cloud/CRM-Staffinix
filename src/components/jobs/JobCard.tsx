@@ -13,14 +13,20 @@ interface JobCardProps {
 export function JobCard({ job, index }: JobCardProps) {
   const navigate = useNavigate();
 
-  const handleViewMatches = () => {
+  const handleCardClick = () => {
+    navigate(`/jobs/${job.id}`);
+  };
+
+  const handleViewMatches = (e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate(`/jobs/${job.id}/matches`);
   };
 
   return (
     <div 
-      className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-glow transition-all duration-300 animate-slide-up opacity-0 group"
+      className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-glow transition-all duration-300 animate-slide-up opacity-0 group cursor-pointer"
       style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
+      onClick={handleCardClick}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
