@@ -10,7 +10,7 @@ import { useSubmissions } from '@/context/SubmissionsContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MapPin, Building2, Sparkles, ArrowLeft, Users, Calendar, DollarSign, FileText } from 'lucide-react';
+import { MapPin, Building2, Sparkles, ArrowLeft, Users, Calendar, DollarSign, FileText, Globe, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function JobMatches() {
@@ -57,40 +57,76 @@ export default function JobMatches() {
 
   const handleSubmit = (match: JobMatch) => {
     setSelectedMatch(match);
+    
+    // For portal jobs, show confirmation modal
+    // For vendor email jobs, also show confirmation modal but with different flow
     setSubmitModalOpen(true);
   };
 
   const handleConfirmSubmit = () => {
     if (selectedMatch && job) {
-      const newSubmission = {
-        id: `sub-${Date.now()}`,
-        consultantId: selectedMatch.consultant.id,
-        consultantName: selectedMatch.consultant.name,
-        vendorId: '1',
-        vendorName: 'TechStaff Solutions',
-        vendorContact: 'Vendor Rep',
-        jobId: job.id,
-        jobTitle: job.title,
-        client: job.client,
-        submissionDate: new Date().toISOString().split('T')[0],
-        status: 'applied' as const,
-        appliedRate: selectedMatch.consultant.rate,
-        submissionRate: undefined,
-        rate: selectedMatch.consultant.rate,
-        notes: tailoredConsultants.has(selectedMatch.consultant.id) 
-          ? 'Resume shared with AI-tailored version. Awaiting rate confirmation.' 
-          : 'Resume shared with vendor. Awaiting rate confirmation.',
-        rateHistory: []
-      };
+      const isPortal = job.sourceType === 'portal';
       
-      addSubmission(newSubmission);
-      setSubmitModalOpen(false);
-      
-      toast.success('Resume shared!', {
-        description: `${selectedMatch.consultant.name} added to pipeline as "Applied".`
-      });
-      
-      navigate('/submissions');
+      if (isPortal) {
+        // For portal jobs: open portal in new tab and track submission
+        if (job.portalApplyUrl) {
+          window.open(job.portalApplyUrl, '_blank');
+        }
+        
+        const newSubmission = {
+          id: `sub-${Date.now()}`,
+          consultantId: selectedMatch.consultant.id,
+          consultantName: selectedMatch.consultant.name,
+          vendorId: '',
+          vendorName: job.vendorName || 'Portal',
+          vendorContact: '',
+          jobId: job.id,
+          jobTitle: job.title,
+          client: job.client,
+          submissionDate: new Date().toISOString().split('T')[0],
+          status: 'applied' as const,
+          appliedRate: selectedMatch.consultant.rate,
+          submissionRate: undefined,
+          rate: selectedMatch.consultant.rate,
+          notes: `Submitted to ${job.vendorName || 'Portal'}. ${tailoredConsultants.has(selectedMatch.consultant.id) ? 'AI-tailored resume used.' : ''}`,
+          rateHistory: []
+        };
+        
+        addSubmission(newSubmission);
+        setSubmitModalOpen(false);
+        
+        toast.success('Submitted to Portal!', {
+          description: `${selectedMatch.consultant.name} submitted to ${job.vendorName || 'portal'}. Check portal for status.`
+        });
+        
+        navigate('/submissions');
+      } else {
+        // For vendor email jobs: redirect to email automation with pre-filled data
+        const emailData = {
+          vendorEmail: job.vendorEmail || '',
+          vendorName: job.vendorName || 'Vendor',
+          candidateName: selectedMatch.consultant.name,
+          candidateId: selectedMatch.consultant.id,
+          jobTitle: job.title,
+          jobId: job.id,
+          clientName: job.client,
+          rate: selectedMatch.consultant.rate,
+          skills: selectedMatch.consultant.skills,
+          experience: selectedMatch.consultant.experience,
+          visaStatus: selectedMatch.consultant.visaStatus,
+          availability: selectedMatch.consultant.status === 'available' ? 'Immediate' : '2 weeks notice',
+          isTailored: tailoredConsultants.has(selectedMatch.consultant.id)
+        };
+        
+        sessionStorage.setItem('vendorSubmission', JSON.stringify(emailData));
+        setSubmitModalOpen(false);
+        
+        toast.info('Redirecting to Email Automation...', {
+          description: 'Email will be pre-filled with submission details.'
+        });
+        
+        navigate('/emails?source=vendor_submission');
+      }
     }
   };
 
@@ -113,7 +149,21 @@ export default function JobMatches() {
       <Card className="p-4 mb-4">
         <div className="flex items-start justify-between mb-3">
           <div>
-            <h2 className="text-base font-semibold text-foreground">{job.title}</h2>
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-base font-semibold text-foreground">{job.title}</h2>
+              {/* Source Type Badge */}
+              {job.sourceType === 'portal' ? (
+                <Badge className="bg-blue-500/20 text-blue-500 border border-blue-500/30 text-xs">
+                  <Globe className="w-3 h-3 mr-1" />
+                  Portal
+                </Badge>
+              ) : (
+                <Badge className="bg-primary/20 text-primary border border-primary/30 text-xs">
+                  <Mail className="w-3 h-3 mr-1" />
+                  Vendor Email
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
               <div className="flex items-center gap-1">
                 <Building2 className="w-3 h-3" />
@@ -131,6 +181,18 @@ export default function JobMatches() {
                 <Calendar className="w-3 h-3" />
                 <span>Deadline: {job.deadline}</span>
               </div>
+              {/* Source-specific info */}
+              {job.sourceType === 'portal' ? (
+                <div className="flex items-center gap-1 text-blue-500">
+                  <Globe className="w-3 h-3" />
+                  <span>{job.vendorName || 'Job Portal'}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <Mail className="w-3 h-3" />
+                  <span>{job.vendorName || 'Vendor'}</span>
+                </div>
+              )}
             </div>
           </div>
           <Badge variant="outline" className="text-xs">{job.jobType}</Badge>
@@ -213,6 +275,7 @@ export default function JobMatches() {
                 onTailorResume={() => handleTailorResume(match)}
                 onSubmit={() => handleSubmit(match)}
                 isTailored={tailoredConsultants.has(match.consultant.id)}
+                sourceType={job.sourceType}
               />
             ))}
         </div>
@@ -244,6 +307,11 @@ export default function JobMatches() {
             client={job.client}
             rate={selectedMatch.consultant.rate}
             isTailored={tailoredConsultants.has(selectedMatch.consultant.id)}
+            sourceType={job.sourceType}
+            vendorName={job.vendorName}
+            vendorEmail={job.vendorEmail}
+            portalName={job.sourceType === 'portal' ? job.vendorName : undefined}
+            portalUrl={job.portalApplyUrl}
           />
         </>
       )}

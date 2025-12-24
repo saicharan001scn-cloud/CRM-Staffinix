@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { MapPin, DollarSign, FileEdit, Send, CheckCircle } from 'lucide-react';
+import { MapPin, DollarSign, FileEdit, Send, CheckCircle, Globe, Mail } from 'lucide-react';
 import { JobMatch } from '@/data/mockJobMatches';
 import { cn } from '@/lib/utils';
 
@@ -11,6 +11,7 @@ interface MatchedConsultantCardProps {
   onTailorResume: () => void;
   onSubmit: () => void;
   isTailored: boolean;
+  sourceType?: 'portal' | 'vendor_email';
 }
 
 export function MatchedConsultantCard({ 
@@ -18,9 +19,12 @@ export function MatchedConsultantCard({
   index, 
   onTailorResume, 
   onSubmit,
-  isTailored 
+  isTailored,
+  sourceType = 'vendor_email'
 }: MatchedConsultantCardProps) {
   const { consultant, matchScore, matchingSkills, missingSkills } = match;
+  
+  const isPortal = sourceType === 'portal';
   
   const getScoreColor = (score: number) => {
     if (score >= 85) return 'text-success';
@@ -132,11 +136,23 @@ export function MatchedConsultantCard({
           {isTailored ? 'View Tailored Resume' : 'Tailor Resume'}
         </Button>
         <Button 
-          className="flex-1 gap-2"
+          className={cn(
+            "flex-1 gap-2",
+            isPortal && "bg-blue-600 hover:bg-blue-700"
+          )}
           onClick={onSubmit}
         >
-          <Send className="w-4 h-4" />
-          Submit
+          {isPortal ? (
+            <>
+              <Globe className="w-4 h-4" />
+              Submit to Portal
+            </>
+          ) : (
+            <>
+              <Mail className="w-4 h-4" />
+              Submit to Vendor
+            </>
+          )}
         </Button>
       </div>
     </div>
