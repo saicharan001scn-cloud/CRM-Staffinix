@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { RefreshCw, Sparkles, Search, X, Filter, Plus, Briefcase, CheckCircle, Users } from 'lucide-react';
+import { RefreshCw, Search, X, Filter, Briefcase, CheckCircle, Users, Globe, Mail } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const sourceColors: Record<string, string> = {
   Dice: 'bg-orange-500/20 text-orange-500 border-orange-500/30',
@@ -22,17 +23,16 @@ const sourceColors: Record<string, string> = {
   Indeed: 'bg-purple-500/20 text-purple-500 border-purple-500/30',
   Monster: 'bg-green-500/20 text-green-500 border-green-500/30',
   CareerBuilder: 'bg-red-500/20 text-red-500 border-red-500/30',
-  'Vendor Email': 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
-  'Talent.com': 'bg-cyan-500/20 text-cyan-500 border-cyan-500/30',
 };
 
-const allSources = ['Dice', 'LinkedIn', 'Indeed', 'Monster', 'CareerBuilder', 'Vendor Email', 'Talent.com', 'Referral', 'Direct Client'];
+const allSources = ['Dice', 'LinkedIn', 'Indeed', 'Monster', 'CareerBuilder', 'Referral', 'Direct Client'];
 
 export default function Jobs() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [showAddJob, setShowAddJob] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Set<'open' | 'filled'>>(new Set());
+  const [sourceTypeFilter, setSourceTypeFilter] = useState<'all' | 'portal' | 'vendor_email'>('all');
 
   const toggleStatusFilter = (status: 'open' | 'filled') => {
     setActiveFilters(prev => {
@@ -57,12 +57,16 @@ export default function Jobs() {
     
     const matchesStatus = activeFilters.size === 0 || activeFilters.has(job.status as 'open' | 'filled');
     
-    return matchesSearch && matchesSource && matchesStatus;
+    const matchesSourceType = sourceTypeFilter === 'all' || job.sourceType === sourceTypeFilter;
+    
+    return matchesSearch && matchesSource && matchesStatus && matchesSourceType;
   });
 
   const openJobs = mockJobs.filter(j => j.status === 'open').length;
   const filledJobs = mockJobs.filter(j => j.status === 'filled').length;
   const totalMatches = mockJobs.reduce((acc, j) => acc + j.matchedConsultants, 0);
+  const portalJobs = mockJobs.filter(j => j.sourceType === 'portal').length;
+  const vendorEmailJobs = mockJobs.filter(j => j.sourceType === 'vendor_email').length;
 
   const toggleSource = (source: string) => {
     setSelectedSources(prev => 
@@ -125,6 +129,36 @@ export default function Jobs() {
         </span>
       </div>
 
+      {/* Source Type Tabs */}
+      <div className="flex items-center gap-2 mb-4">
+        <Button
+          variant={sourceTypeFilter === 'all' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSourceTypeFilter('all')}
+          className="gap-1"
+        >
+          All Jobs ({mockJobs.length})
+        </Button>
+        <Button
+          variant={sourceTypeFilter === 'portal' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSourceTypeFilter('portal')}
+          className={cn("gap-1", sourceTypeFilter === 'portal' && "bg-blue-500 hover:bg-blue-600")}
+        >
+          <Globe className="w-3 h-3" />
+          Portals ({portalJobs})
+        </Button>
+        <Button
+          variant={sourceTypeFilter === 'vendor_email' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSourceTypeFilter('vendor_email')}
+          className={cn("gap-1", sourceTypeFilter === 'vendor_email' && "bg-amber-500 hover:bg-amber-600")}
+        >
+          <Mail className="w-3 h-3" />
+          Vendor Emails ({vendorEmailJobs})
+        </Button>
+      </div>
+
       {/* Quick Stats with Toggleable Filters */}
       <TooltipProvider>
         <div className="flex items-center gap-4 mb-6 p-4 bg-card border border-border rounded-xl">
@@ -175,14 +209,6 @@ export default function Jobs() {
             </TooltipTrigger>
             <TooltipContent>Click to toggle filled positions filter</TooltipContent>
           </Tooltip>
-
-          <div className="h-4 w-px bg-border" />
-
-          <div className="flex flex-wrap gap-2">
-            {allSources.slice(0, 4).map(source => (
-              <Badge key={source} variant="outline" className={sourceColors[source] || ''}>{source}</Badge>
-            ))}
-          </div>
 
           <Button variant="ghost" size="sm" className="ml-auto gap-2">
             <RefreshCw className="w-4 h-4" />

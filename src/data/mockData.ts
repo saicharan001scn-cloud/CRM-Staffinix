@@ -157,6 +157,8 @@ export const mockJobs: JobRequirement[] = [
     description: 'Looking for a senior Java developer to work on core banking microservices...',
     deadline: '2024-01-20',
     source: 'Dice',
+    sourceType: 'portal',
+    portalApplyUrl: 'https://www.dice.com/jobs/apply/java-developer-12345',
     postedDate: '2024-01-10',
     matchedConsultants: 3,
     status: 'open'
@@ -173,6 +175,8 @@ export const mockJobs: JobRequirement[] = [
     description: 'Building next-generation fintech platform UI...',
     deadline: '2024-01-25',
     source: 'LinkedIn',
+    sourceType: 'portal',
+    portalApplyUrl: 'https://www.linkedin.com/jobs/view/react-engineer-67890',
     postedDate: '2024-01-12',
     matchedConsultants: 5,
     status: 'open'
@@ -189,6 +193,8 @@ export const mockJobs: JobRequirement[] = [
     description: 'Building production NLP pipelines for enterprise search...',
     deadline: '2024-01-22',
     source: 'Indeed',
+    sourceType: 'portal',
+    portalApplyUrl: 'https://www.indeed.com/viewjob?jk=ml-engineer-nlp-11111',
     postedDate: '2024-01-11',
     matchedConsultants: 2,
     status: 'open'
@@ -204,7 +210,10 @@ export const mockJobs: JobRequirement[] = [
     visaRequirements: ['H1B', 'GC', 'USC'],
     description: 'Lead Salesforce implementation for patient management system...',
     deadline: '2024-01-18',
-    source: 'Vendor Email',
+    source: 'TechStaff Solutions',
+    sourceType: 'vendor_email',
+    vendorEmail: 'michael@techstaff.com',
+    vendorName: 'TechStaff Solutions',
     postedDate: '2024-01-09',
     matchedConsultants: 1,
     status: 'open'
@@ -220,7 +229,10 @@ export const mockJobs: JobRequirement[] = [
     visaRequirements: ['H1B', 'GC', 'USC'],
     description: 'Lead cloud migration and DevOps transformation...',
     deadline: '2024-01-30',
-    source: 'Talent.com',
+    source: 'Apex Consulting',
+    sourceType: 'vendor_email',
+    vendorEmail: 'sarah@apexconsulting.com',
+    vendorName: 'Apex Consulting',
     postedDate: '2024-01-14',
     matchedConsultants: 4,
     status: 'open'

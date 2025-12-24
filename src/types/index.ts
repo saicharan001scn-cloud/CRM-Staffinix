@@ -80,6 +80,8 @@ export interface Vendor {
 
 export type JobType = 'W2' | 'C2C' | 'Both' | '1099';
 
+export type JobSourceType = 'portal' | 'vendor_email';
+
 export interface JobRequirement {
   id: string;
   title: string;
@@ -92,6 +94,10 @@ export interface JobRequirement {
   description: string;
   deadline: string;
   source: string;
+  sourceType: JobSourceType;
+  portalApplyUrl?: string;
+  vendorEmail?: string;
+  vendorName?: string;
   postedDate: string;
   matchedConsultants: number;
   status: 'open' | 'closed' | 'filled';
