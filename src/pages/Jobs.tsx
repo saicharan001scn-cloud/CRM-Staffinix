@@ -1,8 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { JobCard } from '@/components/jobs/JobCard';
 import { AddJobModal, NewJob } from '@/components/jobs/AddJobModal';
+import { SubmitToVendorModal } from '@/components/jobs/SubmitToVendorModal';
 import { mockJobs } from '@/data/mockData';
+import { mockJobMatches, JobMatch } from '@/data/mockJobMatches';
+import { JobRequirement } from '@/types';
+import { useSubmissions } from '@/context/SubmissionsContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,11 +33,15 @@ const sourceColors: Record<string, string> = {
 const allSources = ['Dice', 'LinkedIn', 'Indeed', 'Monster', 'CareerBuilder', 'Referral', 'Direct Client'];
 
 export default function Jobs() {
+  const navigate = useNavigate();
+  const { addSubmission } = useSubmissions();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [showAddJob, setShowAddJob] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Set<'open' | 'filled'>>(new Set());
   const [sourceTypeFilter, setSourceTypeFilter] = useState<'all' | 'portal' | 'vendor_email'>('all');
+  const [submitToVendorModalOpen, setSubmitToVendorModalOpen] = useState(false);
+  const [selectedJobForSubmission, setSelectedJobForSubmission] = useState<JobRequirement | null>(null);
 
   const toggleStatusFilter = (status: 'open' | 'filled') => {
     setActiveFilters(prev => {
@@ -77,6 +86,92 @@ export default function Jobs() {
   const handleAddJob = (job: NewJob) => {
     console.log('New job:', job);
     toast.success('Job added successfully!');
+  };
+
+  const handleSubmitToVendor = (job: JobRequirement) => {
+    setSelectedJobForSubmission(job);
+    setSubmitToVendorModalOpen(true);
+  };
+
+  const generateVendorEmailTemplate = (candidate: JobMatch['consultant'], job: JobRequirement) => {
+    return `Dear ${job.vendorName || 'Team'},
+
+Please find below candidate submission for the ${job.title} position at ${job.client}:
+
+CANDIDATE DETAILS:
+• Name: ${candidate.name}
+• Experience: ${candidate.experience} years
+• Key Skills: ${candidate.skills.join(', ')}
+• Visa Status: ${candidate.visaStatus}
+• Rate Expectation: $${candidate.rate}/hour
+• Availability: ${candidate.status === 'available' ? 'Immediately' : 'With notice'}
+• Location: ${candidate.location}
+
+RESUME:
+Attached is ${candidate.name.split(' ')[0]}'s resume specifically for this ${job.title} role.
+
+SUBMISSION NOTES:
+This candidate is well-matched for the position requirements with a strong background in the required technologies.
+
+NEXT STEPS:
+Please let us know when ${candidate.name.split(' ')[0]}'s profile is submitted to ${job.client} and share any feedback or interview schedules.
+
+Best regards,
+
+Your Name
+Recruiting Team
+Your Company`;
+  };
+
+  const handleConfirmVendorSubmission = (selectedMatches: JobMatch[]) => {
+    if (!selectedJobForSubmission || selectedMatches.length === 0) return;
+
+    const job = selectedJobForSubmission;
+    const candidate = selectedMatches[0]; // For now, handle first candidate
+
+    // 1. Create submission with "Applied" status
+    const newSubmission = {
+      id: `sub-${Date.now()}`,
+      consultantId: candidate.consultant.id,
+      consultantName: candidate.consultant.name,
+      vendorId: job.vendorName || '',
+      vendorName: job.vendorName || 'Vendor',
+      vendorContact: job.vendorEmail || '',
+      jobId: job.id,
+      jobTitle: job.title,
+      client: job.client,
+      submissionDate: new Date().toISOString().split('T')[0],
+      status: 'applied' as const,
+      appliedRate: candidate.consultant.rate,
+      submissionRate: undefined,
+      rate: candidate.consultant.rate,
+      notes: `Applied to ${job.vendorName || 'vendor'}. Email pending.`,
+      rateHistory: []
+    };
+
+    addSubmission(newSubmission);
+
+    // 2. Prepare email data for Email Automation page
+    const emailData = {
+      to: job.vendorEmail || '',
+      subject: `Candidate Submission: ${candidate.consultant.name} for ${job.title} at ${job.client}`,
+      body: generateVendorEmailTemplate(candidate.consultant, job),
+      attachments: [`${candidate.consultant.name.replace(/\s+/g, '_')}_Resume.pdf`],
+      vendorName: job.vendorName || 'Vendor',
+      candidateName: candidate.consultant.name,
+      jobTitle: job.title,
+      clientName: job.client
+    };
+
+    sessionStorage.setItem('emailData', JSON.stringify(emailData));
+
+    // 3. Show success toast
+    toast.success('Candidate marked as Applied!', {
+      description: `${candidate.consultant.name}'s status updated. Redirecting to email...`
+    });
+
+    // 4. Navigate to email automation
+    navigate('/emails?source=vendor_submission');
   };
 
   return (
@@ -220,7 +315,12 @@ export default function Jobs() {
       {/* Jobs Grid */}
       <div className="grid grid-cols-2 gap-6">
         {filteredJobs.map((job, index) => (
-          <JobCard key={job.id} job={job} index={index} />
+          <JobCard 
+            key={job.id} 
+            job={job} 
+            index={index} 
+            onSubmitToVendor={handleSubmitToVendor}
+          />
         ))}
       </div>
 
@@ -236,6 +336,20 @@ export default function Jobs() {
         onClose={() => setShowAddJob(false)}
         onAdd={handleAddJob}
       />
+
+      {/* Submit to Vendor Modal */}
+      {selectedJobForSubmission && (
+        <SubmitToVendorModal
+          open={submitToVendorModalOpen}
+          onClose={() => {
+            setSubmitToVendorModalOpen(false);
+            setSelectedJobForSubmission(null);
+          }}
+          job={selectedJobForSubmission}
+          matches={mockJobMatches[selectedJobForSubmission.id] || []}
+          onConfirmSubmit={handleConfirmVendorSubmission}
+        />
+      )}
     </MainLayout>
   );
 }

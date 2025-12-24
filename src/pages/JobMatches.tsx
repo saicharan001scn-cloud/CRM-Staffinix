@@ -101,28 +101,75 @@ export default function JobMatches() {
         
         navigate('/submissions');
       } else {
-        // For vendor email jobs: redirect to email automation with pre-filled data
-        const emailData = {
-          vendorEmail: job.vendorEmail || '',
+        // For vendor email jobs: 
+        // 1. IMMEDIATELY update submission to "Applied" status
+        const newSubmission = {
+          id: `sub-${Date.now()}`,
+          consultantId: selectedMatch.consultant.id,
+          consultantName: selectedMatch.consultant.name,
+          vendorId: job.vendorName || '',
           vendorName: job.vendorName || 'Vendor',
-          candidateName: selectedMatch.consultant.name,
-          candidateId: selectedMatch.consultant.id,
-          jobTitle: job.title,
+          vendorContact: job.vendorEmail || '',
           jobId: job.id,
-          clientName: job.client,
+          jobTitle: job.title,
+          client: job.client,
+          submissionDate: new Date().toISOString().split('T')[0],
+          status: 'applied' as const,
+          appliedRate: selectedMatch.consultant.rate,
+          submissionRate: undefined,
           rate: selectedMatch.consultant.rate,
-          skills: selectedMatch.consultant.skills,
-          experience: selectedMatch.consultant.experience,
-          visaStatus: selectedMatch.consultant.visaStatus,
-          availability: selectedMatch.consultant.status === 'available' ? 'Immediate' : '2 weeks notice',
-          isTailored: tailoredConsultants.has(selectedMatch.consultant.id)
+          notes: `Applied to ${job.vendorName || 'vendor'}. Email pending.`,
+          rateHistory: []
         };
         
-        sessionStorage.setItem('vendorSubmission', JSON.stringify(emailData));
+        addSubmission(newSubmission);
+        
+        // 2. Generate fully written email template
+        const emailBody = `Dear ${job.vendorName || 'Team'},
+
+Please find below candidate submission for the ${job.title} position at ${job.client}:
+
+CANDIDATE DETAILS:
+• Name: ${selectedMatch.consultant.name}
+• Experience: ${selectedMatch.consultant.experience} years
+• Key Skills: ${selectedMatch.consultant.skills.join(', ')}
+• Visa Status: ${selectedMatch.consultant.visaStatus}
+• Rate Expectation: $${selectedMatch.consultant.rate}/hour
+• Availability: ${selectedMatch.consultant.status === 'available' ? 'Immediately' : 'With notice'}
+• Location: ${selectedMatch.consultant.location}
+
+RESUME:
+Attached is ${selectedMatch.consultant.name.split(' ')[0]}'s ${tailoredConsultants.has(selectedMatch.consultant.id) ? 'tailored ' : ''}resume specifically for this ${job.title} role.
+
+SUBMISSION NOTES:
+This candidate is well-matched for the position requirements with a strong background in the required technologies.
+
+NEXT STEPS:
+Please let us know when ${selectedMatch.consultant.name.split(' ')[0]}'s profile is submitted to ${job.client} and share any feedback or interview schedules.
+
+Best regards,
+
+Your Name
+Recruiting Team
+Your Company`;
+
+        const emailData = {
+          to: job.vendorEmail || '',
+          subject: `Candidate Submission: ${selectedMatch.consultant.name} for ${job.title} at ${job.client}`,
+          body: emailBody,
+          attachments: [`${selectedMatch.consultant.name.replace(/\s+/g, '_')}_Resume.pdf`],
+          vendorName: job.vendorName || 'Vendor',
+          candidateName: selectedMatch.consultant.name,
+          jobTitle: job.title,
+          clientName: job.client,
+          submissionId: newSubmission.id
+        };
+        
+        sessionStorage.setItem('emailData', JSON.stringify(emailData));
         setSubmitModalOpen(false);
         
-        toast.info('Redirecting to Email Automation...', {
-          description: 'Email will be pre-filled with submission details.'
+        toast.success('Candidate marked as APPLIED!', {
+          description: `${selectedMatch.consultant.name}'s status updated. Redirecting to email automation...`
         });
         
         navigate('/emails?source=vendor_submission');

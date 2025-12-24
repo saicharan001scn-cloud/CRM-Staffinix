@@ -177,12 +177,20 @@ export default function Emails() {
                 <Mail className="w-5 h-5 text-primary" />
                 Compose Email
               </h3>
-              {isPreFilled && (
-                <Badge variant="secondary" className="gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  Pre-filled from submission
-                </Badge>
-              )}
+              <div className="flex items-center gap-2">
+                {isPreFilled && (
+                  <>
+                    <Badge className="gap-1 bg-success/20 text-success border border-success/30">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Candidate Status: APPLIED
+                    </Badge>
+                    <Badge variant="secondary" className="gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      Pre-filled from submission
+                    </Badge>
+                  </>
+                )}
+              </div>
             </div>
             
             <div className="space-y-4">

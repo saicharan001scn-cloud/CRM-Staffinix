@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 interface JobCardProps {
   job: JobRequirement;
   index: number;
+  onSubmitToVendor?: (job: JobRequirement) => void;
 }
 
 const portalIcons: Record<string, string> = {
@@ -19,7 +20,7 @@ const portalIcons: Record<string, string> = {
   'CareerBuilder': '🏗️',
 };
 
-export function JobCard({ job, index }: JobCardProps) {
+export function JobCard({ job, index, onSubmitToVendor }: JobCardProps) {
   const navigate = useNavigate();
 
   const handleViewMatches = () => {
@@ -36,14 +37,19 @@ export function JobCard({ job, index }: JobCardProps) {
         toast.error('Portal URL not available');
       }
     } else {
-      // For vendor email jobs, store data and redirect to email automation
-      sessionStorage.setItem('vendorSubmission', JSON.stringify({
-        vendorEmail: job.vendorEmail,
-        vendorName: job.vendorName || job.source,
-        jobTitle: job.title,
-        clientName: job.client,
-      }));
-      navigate('/emails?type=vendor_submission');
+      // For vendor email jobs, open the Submit to Vendor modal
+      if (onSubmitToVendor) {
+        onSubmitToVendor(job);
+      } else {
+        // Fallback: redirect to email automation
+        sessionStorage.setItem('vendorSubmission', JSON.stringify({
+          vendorEmail: job.vendorEmail,
+          vendorName: job.vendorName || job.source,
+          jobTitle: job.title,
+          clientName: job.client,
+        }));
+        navigate('/emails?type=vendor_submission');
+      }
     }
   };
 
@@ -161,7 +167,10 @@ export function JobCard({ job, index }: JobCardProps) {
           <Button 
             size="sm" 
             variant="outline"
-            className="gap-1 text-xs"
+            className={cn(
+              "gap-1 text-xs",
+              !isPortal && "bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20"
+            )}
             onClick={handleSubmitAction}
           >
             {isPortal ? (
@@ -172,7 +181,7 @@ export function JobCard({ job, index }: JobCardProps) {
             ) : (
               <>
                 <Mail className="w-3 h-3" />
-                Email Vendor
+                Submit to Vendor
               </>
             )}
           </Button>
