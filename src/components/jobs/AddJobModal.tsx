@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { X, Plus, Save, RotateCcw } from 'lucide-react';
+import { X, Plus, Save, RotateCcw, Link2, ExternalLink, User, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AddJobModalProps {
@@ -21,6 +21,7 @@ export interface NewJob {
   title: string;
   location: string;
   workType: 'Remote' | 'Onsite' | 'Hybrid';
+  jobUrl: string;
   vendorCompanyName: string;
   implementationPartner: string;
   endClientName: string;
@@ -37,7 +38,28 @@ export interface NewJob {
   visaRequirements: string[];
   source: string;
   urgency: 'High' | 'Medium' | 'Low';
+  addedByName: string;
+  addedByEmail: string;
 }
+
+// Mock current user - in real app, this would come from auth context
+const currentUser = {
+  id: 'user123',
+  name: 'John Smith',
+  email: 'john.smith@company.com'
+};
+
+// Portal detection configuration
+const PORTAL_DETECTION = {
+  'dice.com': 'Dice',
+  'linkedin.com': 'LinkedIn',
+  'indeed.com': 'Indeed',
+  'monster.com': 'Monster',
+  'careerbuilder.com': 'CareerBuilder',
+  'glassdoor.com': 'Glassdoor',
+  'ziprecruiter.com': 'ZipRecruiter',
+  'talent.com': 'Talent.com'
+};
 
 const sourceOptions = ['LinkedIn', 'Dice', 'Indeed', 'Monster', 'CareerBuilder', 'Vendor Email', 'Referral', 'Direct Client', 'Talent.com', 'Other'];
 const visaOptions = ['US Citizen', 'Green Card', 'H1B', 'OPT', 'CPT', 'L1', 'L2', 'TN', 'Any'];
@@ -45,11 +67,35 @@ const commonSkills = ['Java', 'Python', 'React', 'Angular', 'Node.js', 'AWS', 'A
 const vendorSuggestions = ['TekSystems', 'Robert Half', 'Insight Global', 'Apex Systems', 'Randstad', 'Modis'];
 const clientSuggestions = ['TechCorp', 'FinanceHub', 'HealthTech Inc', 'RetailMax', 'AutoDrive Systems', 'CloudNet Solutions'];
 
+// URL validation helper
+const isValidUrl = (url: string): boolean => {
+  if (!url) return true; // Optional field
+  try {
+    new URL(url.startsWith('http') ? url : `https://${url}`);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Detect portal from URL
+const detectPortalFromUrl = (url: string): string | null => {
+  if (!url) return null;
+  const lowerUrl = url.toLowerCase();
+  for (const [domain, portalName] of Object.entries(PORTAL_DETECTION)) {
+    if (lowerUrl.includes(domain)) {
+      return portalName;
+    }
+  }
+  return null;
+};
+
 export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
   const [formData, setFormData] = useState<NewJob>({
     title: '',
     location: '',
     workType: 'Remote',
+    jobUrl: '',
     vendorCompanyName: '',
     implementationPartner: '',
     endClientName: '',
@@ -66,15 +112,34 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
     visaRequirements: [],
     source: '',
     urgency: 'Medium',
+    addedByName: currentUser.name,
+    addedByEmail: currentUser.email,
   });
   const [skillInput, setSkillInput] = useState('');
   const [secondarySkillInput, setSecondarySkillInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [detectedPortal, setDetectedPortal] = useState<string | null>(null);
+
+  // Auto-detect portal when URL changes
+  useEffect(() => {
+    if (formData.jobUrl) {
+      const portal = detectPortalFromUrl(formData.jobUrl);
+      setDetectedPortal(portal);
+      if (portal && !formData.source) {
+        setFormData(prev => ({ ...prev, source: portal }));
+      }
+    } else {
+      setDetectedPortal(null);
+    }
+  }, [formData.jobUrl]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!formData.title.trim()) newErrors.title = 'Job role is required';
     if (!formData.location.trim()) newErrors.location = 'Location is required';
+    if (formData.jobUrl && !isValidUrl(formData.jobUrl)) {
+      newErrors.jobUrl = 'Please enter a valid URL (e.g., https://dice.com/jobs/12345)';
+    }
     if (!formData.vendorCompanyName.trim()) newErrors.vendorCompanyName = 'Vendor company name is required';
     if (!formData.endClientName.trim()) newErrors.endClientName = 'End client name is required';
     if (!formData.vendorContactEmail.trim()) newErrors.vendorContactEmail = 'Vendor contact email is required';
@@ -91,6 +156,13 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
     if (!formData.source) newErrors.source = 'Job source is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleTestUrl = () => {
+    if (formData.jobUrl) {
+      const url = formData.jobUrl.startsWith('http') ? formData.jobUrl : `https://${formData.jobUrl}`;
+      window.open(url, '_blank');
+    }
   };
 
   const handleSubmit = (saveAndAdd: boolean) => {
@@ -114,6 +186,7 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
       title: '',
       location: '',
       workType: 'Remote',
+      jobUrl: '',
       vendorCompanyName: '',
       implementationPartner: '',
       endClientName: '',
@@ -130,10 +203,13 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
       visaRequirements: [],
       source: '',
       urgency: 'Medium',
+      addedByName: currentUser.name,
+      addedByEmail: currentUser.email,
     });
     setSkillInput('');
     setSecondarySkillInput('');
     setErrors({});
+    setDetectedPortal(null);
   };
 
   const addSkill = (skill: string) => {
@@ -217,6 +293,43 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
                 ))}
               </RadioGroup>
             </div>
+          </div>
+
+          {/* Job URL Field */}
+          <div>
+            <Label htmlFor="jobUrl" className="text-xs flex items-center gap-1">
+              <Link2 className="w-3 h-3" />
+              Job Portal/Application URL
+              <span className="text-muted-foreground text-[10px]">(Optional)</span>
+            </Label>
+            <div className="flex items-center gap-2 mt-1">
+              <Input
+                id="jobUrl"
+                value={formData.jobUrl}
+                onChange={(e) => setFormData({ ...formData, jobUrl: e.target.value.trim() })}
+                placeholder="https://www.dice.com/jobs/12345 or https://company.com/careers"
+                className={`flex-1 ${errors.jobUrl ? 'border-destructive' : ''}`}
+              />
+              {formData.jobUrl && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleTestUrl}
+                  className="gap-1"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Test
+                </Button>
+              )}
+            </div>
+            {errors.jobUrl && <p className="text-[10px] text-destructive mt-0.5">{errors.jobUrl}</p>}
+            {detectedPortal && (
+              <div className="flex items-center gap-1 mt-1">
+                <CheckCircle2 className="w-3 h-3 text-green-500" />
+                <span className="text-[10px] text-green-600">Auto-detected as {detectedPortal} job portal</span>
+              </div>
+            )}
           </div>
 
           {/* Client Chain Section */}
@@ -483,6 +596,9 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
                 </SelectContent>
               </Select>
               {errors.source && <p className="text-[10px] text-destructive mt-0.5">{errors.source}</p>}
+              {detectedPortal && formData.source === detectedPortal && (
+                <p className="text-[10px] text-muted-foreground mt-0.5">Auto-filled from URL</p>
+              )}
             </div>
             <div>
               <Label className="text-xs">Urgency Level</Label>
@@ -497,6 +613,23 @@ export function AddJobModal({ open, onClose, onAdd }: AddJobModalProps) {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Added By (Read-only) */}
+          <div className="border border-border rounded-lg p-4 bg-muted/30">
+            <Label className="text-xs flex items-center gap-1 text-muted-foreground">
+              <User className="w-3 h-3" />
+              Added By
+            </Label>
+            <div className="flex items-center gap-2 mt-1">
+              <Input
+                value={`${formData.addedByName} (${formData.addedByEmail})`}
+                readOnly
+                className="bg-muted/50 text-muted-foreground cursor-not-allowed"
+              />
+              <Badge variant="secondary" className="text-[10px]">Auto-filled</Badge>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">This field is automatically set and cannot be edited</p>
           </div>
         </div>
 
