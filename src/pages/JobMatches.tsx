@@ -233,6 +233,7 @@ export default function JobMatches() {
             onApprove={handleApproveResume}
             consultantName={selectedMatch.consultant.name}
             jobTitle={job.title}
+            clientName={job.client}
           />
           <SubmitConfirmModal
             open={submitModalOpen}

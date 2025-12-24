@@ -10,7 +10,7 @@ import {
   Target, Zap, Edit2, History, Save, Copy, Send, RotateCcw, 
   FileDown, Clock, ChevronDown, Check, Maximize2, Minimize2,
   Bold, Italic, List, Type, Undo, Redo, Eye, Bot, User,
-  Star, GitCompare, ChevronRight
+  Star, GitCompare, ChevronRight, Mail
 } from 'lucide-react';
 import { mockOriginalResume, mockTailoredResume } from '@/data/mockJobMatches';
 import { toast } from 'sonner';
@@ -31,6 +31,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { SendToVendorModal } from './SendToVendorModal';
 
 interface EnhancedTailorResumeModalProps {
   open: boolean;
@@ -38,8 +39,8 @@ interface EnhancedTailorResumeModalProps {
   onApprove: () => void;
   consultantName: string;
   jobTitle: string;
+  clientName?: string;
 }
-
 type RegenerationOption = 'keywords' | 'ats' | 'experience' | 'custom';
 
 interface ResumeVersion {
@@ -59,7 +60,8 @@ export function EnhancedTailorResumeModal({
   onClose, 
   onApprove, 
   consultantName, 
-  jobTitle 
+  jobTitle,
+  clientName = 'Client Company'
 }: EnhancedTailorResumeModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -92,6 +94,7 @@ export function EnhancedTailorResumeModal({
     }
   ]);
   const [selectedVersionId, setSelectedVersionId] = useState('1');
+  const [sendToVendorOpen, setSendToVendorOpen] = useState(false);
 
   // Auto-save effect
   useEffect(() => {
@@ -201,7 +204,7 @@ export function EnhancedTailorResumeModal({
   };
 
   const handleSendToVendor = () => {
-    toast.success('Opening email composer...', { description: 'Resume attached to vendor email.' });
+    setSendToVendorOpen(true);
   };
 
   const handleMarkAsSubmitted = () => {
@@ -712,7 +715,7 @@ export function EnhancedTailorResumeModal({
                 </div>
                 
                 <Button variant="outline" size="sm" className="w-full h-8 text-xs gap-1" onClick={handleSendToVendor}>
-                  <Send className="w-3.5 h-3.5" />
+                  <Mail className="w-3.5 h-3.5" />
                   Send to Vendor
                 </Button>
                 
@@ -724,6 +727,15 @@ export function EnhancedTailorResumeModal({
             </Card>
           </div>
         </div>
+
+        {/* Send to Vendor Modal */}
+        <SendToVendorModal
+          open={sendToVendorOpen}
+          onClose={() => setSendToVendorOpen(false)}
+          consultantName={consultantName}
+          jobTitle={jobTitle}
+          clientName={clientName}
+        />
       </DialogContent>
     </Dialog>
   );
