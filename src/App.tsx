@@ -1,3 +1,4 @@
+import { StrictMode, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,38 +23,42 @@ import IntegrationsManagement from "./pages/IntegrationsManagement";
 import ApiKeysManagement from "./pages/ApiKeysManagement";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const App = () => {
+  const [queryClient] = useState(() => new QueryClient());
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <SubmissionsProvider>
-          <Toaster />
-          <Sonner />
+  return (
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
           <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/consultants" element={<ProtectedRoute><Consultants /></ProtectedRoute>} />
-              <Route path="/consultants/:consultantId" element={<ProtectedRoute><ConsultantProfile /></ProtectedRoute>} />
-              <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
-              <Route path="/jobs/:jobId/matches" element={<ProtectedRoute><JobMatches /></ProtectedRoute>} />
-              <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
-              <Route path="/submissions" element={<ProtectedRoute><Submissions /></ProtectedRoute>} />
-              <Route path="/emails" element={<ProtectedRoute><Emails /></ProtectedRoute>} />
-              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-              <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/settings/integrations" element={<ProtectedRoute><IntegrationsManagement /></ProtectedRoute>} />
-              <Route path="/settings/api-keys" element={<ProtectedRoute><ApiKeysManagement /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AuthProvider>
+              <SubmissionsProvider>
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                  <Route path="/consultants" element={<ProtectedRoute><Consultants /></ProtectedRoute>} />
+                  <Route path="/consultants/:consultantId" element={<ProtectedRoute><ConsultantProfile /></ProtectedRoute>} />
+                  <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
+                  <Route path="/jobs/:jobId/matches" element={<ProtectedRoute><JobMatches /></ProtectedRoute>} />
+                  <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
+                  <Route path="/submissions" element={<ProtectedRoute><Submissions /></ProtectedRoute>} />
+                  <Route path="/emails" element={<ProtectedRoute><Emails /></ProtectedRoute>} />
+                  <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                  <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                  <Route path="/settings/integrations" element={<ProtectedRoute><IntegrationsManagement /></ProtectedRoute>} />
+                  <Route path="/settings/api-keys" element={<ProtectedRoute><ApiKeysManagement /></ProtectedRoute>} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </SubmissionsProvider>
+            </AuthProvider>
           </BrowserRouter>
-        </SubmissionsProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+        </TooltipProvider>
+      </QueryClientProvider>
+    </StrictMode>
+  );
+};
 
 export default App;
