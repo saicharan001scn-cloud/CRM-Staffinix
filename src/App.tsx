@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SubmissionsProvider } from "./context/SubmissionsContext";
+import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Consultants from "./pages/Consultants";
@@ -25,29 +27,31 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <SubmissionsProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/consultants" element={<Consultants />} />
-            <Route path="/consultants/:consultantId" element={<ConsultantProfile />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/jobs/:jobId/matches" element={<JobMatches />} />
-            <Route path="/vendors" element={<Vendors />} />
-            <Route path="/submissions" element={<Submissions />} />
-            <Route path="/emails" element={<Emails />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/assistant" element={<Assistant />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/settings/integrations" element={<IntegrationsManagement />} />
-            <Route path="/settings/api-keys" element={<ApiKeysManagement />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </SubmissionsProvider>
+      <AuthProvider>
+        <SubmissionsProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/consultants" element={<ProtectedRoute><Consultants /></ProtectedRoute>} />
+              <Route path="/consultants/:consultantId" element={<ProtectedRoute><ConsultantProfile /></ProtectedRoute>} />
+              <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
+              <Route path="/jobs/:jobId/matches" element={<ProtectedRoute><JobMatches /></ProtectedRoute>} />
+              <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
+              <Route path="/submissions" element={<ProtectedRoute><Submissions /></ProtectedRoute>} />
+              <Route path="/emails" element={<ProtectedRoute><Emails /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/settings/integrations" element={<ProtectedRoute><IntegrationsManagement /></ProtectedRoute>} />
+              <Route path="/settings/api-keys" element={<ProtectedRoute><ApiKeysManagement /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </SubmissionsProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

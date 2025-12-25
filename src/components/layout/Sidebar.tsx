@@ -8,10 +8,14 @@ import {
   Mail, 
   BarChart3, 
   Bot, 
-  Settings
+  Settings,
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import staffinixLogo from '@/assets/staffinix-logo.png';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
@@ -26,6 +30,15 @@ const navItems = [
 
 export function Sidebar() {
   const location = useLocation();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success('Signed out successfully');
+  };
+
+  const userInitials = user?.email?.slice(0, 2).toUpperCase() || 'U';
+  const userEmail = user?.email || 'user@example.com';
 
   return (
     <aside 
@@ -79,12 +92,20 @@ export function Sidebar() {
       <div className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-            <span className="text-sm font-medium text-primary">AD</span>
+            <span className="text-sm font-medium text-primary">{userInitials}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">Admin User</p>
-            <p className="text-xs text-muted-foreground truncate">admin@staffinix.com</p>
+            <p className="text-sm font-medium text-foreground truncate">{userEmail}</p>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSignOut}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            title="Sign out"
+          >
+            <LogOut className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </aside>
