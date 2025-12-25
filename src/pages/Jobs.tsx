@@ -4,7 +4,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { JobCard } from '@/components/jobs/JobCard';
 import { AddJobModal, NewJob } from '@/components/jobs/AddJobModal';
 import { SubmitToVendorModal } from '@/components/jobs/SubmitToVendorModal';
-import { mockJobs } from '@/data/mockData';
+import { useJobs } from '@/hooks/useJobs';
 import { mockJobMatches, JobMatch } from '@/data/mockJobMatches';
 import { JobRequirement } from '@/types';
 import { useSubmissions } from '@/context/SubmissionsContext';
@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { RefreshCw, Search, X, Filter, Briefcase, CheckCircle, Users, Globe, Mail } from 'lucide-react';
+import { RefreshCw, Search, X, Filter, Briefcase, CheckCircle, Users, Globe, Mail, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +35,7 @@ const allSources = ['Dice', 'LinkedIn', 'Indeed', 'Monster', 'CareerBuilder', 'R
 export default function Jobs() {
   const navigate = useNavigate();
   const { addSubmission } = useSubmissions();
+  const { jobs, isLoading, addJob } = useJobs();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [showAddJob, setShowAddJob] = useState(false);
@@ -55,7 +56,7 @@ export default function Jobs() {
     });
   };
   
-  const filteredJobs = mockJobs.filter((job) => {
+  const filteredJobs = jobs.filter((job) => {
     const matchesSearch = searchQuery === '' || 
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -71,11 +72,11 @@ export default function Jobs() {
     return matchesSearch && matchesSource && matchesStatus && matchesSourceType;
   });
 
-  const openJobs = mockJobs.filter(j => j.status === 'open').length;
-  const filledJobs = mockJobs.filter(j => j.status === 'filled').length;
-  const totalMatches = mockJobs.reduce((acc, j) => acc + j.matchedConsultants, 0);
-  const portalJobs = mockJobs.filter(j => j.sourceType === 'portal').length;
-  const vendorEmailJobs = mockJobs.filter(j => j.sourceType === 'vendor_email').length;
+  const openJobs = jobs.filter(j => j.status === 'open').length;
+  const filledJobs = jobs.filter(j => j.status === 'filled').length;
+  const totalMatches = jobs.reduce((acc, j) => acc + j.matchedConsultants, 0);
+  const portalJobs = jobs.filter(j => j.sourceType === 'portal').length;
+  const vendorEmailJobs = jobs.filter(j => j.sourceType === 'vendor_email').length;
 
   const toggleSource = (source: string) => {
     setSelectedSources(prev => 
@@ -84,8 +85,21 @@ export default function Jobs() {
   };
 
   const handleAddJob = (job: NewJob) => {
-    console.log('New job:', job);
-    toast.success('Job added successfully!');
+    addJob({
+      title: job.title,
+      location: job.location,
+      client: job.endClientName,
+      description: job.description,
+      skills: job.requiredSkills,
+      minRate: job.minRate,
+      maxRate: job.maxRate,
+      visaRequirements: job.visaRequirements,
+      source: job.source,
+      sourceType: job.jobUrl ? 'portal' : 'vendor_email',
+      portalApplyUrl: job.jobUrl,
+      vendorEmail: job.vendorContactEmail,
+      vendorName: job.vendorCompanyName,
+    });
   };
 
   const handleSubmitToVendor = (job: JobRequirement) => {
@@ -174,6 +188,20 @@ Your Company`;
     navigate('/emails?source=vendor_submission');
   };
 
+  if (isLoading) {
+    return (
+      <MainLayout
+        title="Job Requirements"
+        subtitle="Active job openings from all sources"
+        showBackButton={false}
+      >
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout
       title="Job Requirements"
@@ -232,7 +260,7 @@ Your Company`;
           onClick={() => setSourceTypeFilter('all')}
           className="gap-1"
         >
-          All Jobs ({mockJobs.length})
+          All Jobs ({jobs.length})
         </Button>
         <Button
           variant={sourceTypeFilter === 'portal' ? 'default' : 'outline'}
