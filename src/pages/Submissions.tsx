@@ -16,7 +16,8 @@ import {
   XCircle,
   Filter,
   Search,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 
 const pipelineStats: { 
@@ -37,7 +38,7 @@ const pipelineStats: {
 ];
 
 export default function Submissions() {
-  const { submissions, statusFilter, setStatusFilter } = useSubmissions();
+  const { submissions, statusFilter, setStatusFilter, isLoading } = useSubmissions();
   const [searchQuery, setSearchQuery] = useState('');
   
   const getCount = (status: SubmissionStatus | 'all') => {
@@ -54,6 +55,20 @@ export default function Submissions() {
       s.vendorName.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
+
+  if (isLoading) {
+    return (
+      <MainLayout
+        title="Submission Tracker"
+        subtitle="Track your candidate pipeline from Applied to Placed"
+        showBackButton={false}
+      >
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout
