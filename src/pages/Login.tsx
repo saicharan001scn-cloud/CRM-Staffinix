@@ -24,11 +24,20 @@ export default function Login() {
     }
   }, [user, loading, navigate]);
 
+  const isValidDomain = (email: string) => {
+    return email.toLowerCase().endsWith('@staffinix.com');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
       toast.error('Please enter email and password');
+      return;
+    }
+
+    if (!isValidDomain(email)) {
+      toast.error('Only @staffinix.com email addresses are allowed');
       return;
     }
 
@@ -116,7 +125,7 @@ export default function Login() {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="email"
-                  placeholder="you@company.com"
+                  placeholder="you@staffinix.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-9 text-sm h-9"
