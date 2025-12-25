@@ -8,10 +8,10 @@ import {
   Mail, 
   BarChart3, 
   Bot, 
-  Settings,
-  Sparkles
+  Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import staffinixLogo from '@/assets/staffinix-logo.png';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
@@ -34,9 +34,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
         <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <Sparkles className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img src={staffinixLogo} alt="Staffinix" className="w-10 h-10 rounded-xl object-cover" />
           <span className="font-bold text-xl text-foreground tracking-tight">
             Staffinix
           </span>
