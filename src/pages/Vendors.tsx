@@ -3,10 +3,10 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { VendorTable } from '@/components/vendors/VendorTable';
 import { AddVendorModal, NewVendor } from '@/components/vendors/AddVendorModal';
 import { ImportVendorModal } from '@/components/vendors/ImportVendorModal';
-import { mockVendors } from '@/data/mockData';
+import { useVendors } from '@/hooks/useVendors';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Building2, Trophy, Mail, Search, X, Upload } from 'lucide-react';
+import { TrendingUp, Building2, Trophy, Mail, Search, X, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Vendors() {
@@ -14,7 +14,9 @@ export default function Vendors() {
   const [showAddVendor, setShowAddVendor] = useState(false);
   const [showImportVendor, setShowImportVendor] = useState(false);
   
-  const filteredVendors = mockVendors.filter((vendor) => {
+  const { vendors, isLoading, addVendor } = useVendors();
+  
+  const filteredVendors = vendors.filter((vendor) => {
     if (searchQuery === '') return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -29,14 +31,23 @@ export default function Vendors() {
   const totalPlacements = filteredVendors.reduce((acc, v) => acc + v.placements, 0);
 
   const handleAddVendor = (vendor: NewVendor) => {
-    console.log('New vendor:', vendor);
-    // In real app, would add to database
+    addVendor(vendor);
   };
 
   const handleImportVendors = (vendors: any[]) => {
     console.log('Imported vendors:', vendors);
     toast.success(`${vendors.length} vendors imported successfully!`);
   };
+
+  if (isLoading) {
+    return (
+      <MainLayout title="Vendors" subtitle="Manage your vendor relationships" showBackButton={false}>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout
