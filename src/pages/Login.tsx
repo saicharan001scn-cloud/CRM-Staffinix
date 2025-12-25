@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Lock, Mail, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
+import staffinixLogo from '@/assets/staffinix-logo.png';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -33,9 +34,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo/Brand */}
         <div className="text-center mb-6">
-          <div className="w-12 h-12 gradient-primary rounded-lg flex items-center justify-center mx-auto mb-3">
-            <span className="text-lg font-bold text-primary-foreground">S</span>
-          </div>
+          <img src={staffinixLogo} alt="Staffinix" className="w-16 h-16 rounded-xl mx-auto mb-3" />
           <h1 className="text-xl font-bold text-foreground">Staffinix CRM</h1>
           <p className="text-xs text-muted-foreground mt-1">Sign in to continue</p>
         </div>
