@@ -62,6 +62,8 @@ export function ConsultantTable({ consultants }: ConsultantTableProps) {
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground">Rate</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground">Location</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Added By</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Date Added</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground">Match</th>
                 <th className="text-right p-3 text-xs font-medium text-muted-foreground">Actions</th>
               </tr>
@@ -115,6 +117,16 @@ export function ConsultantTable({ consultants }: ConsultantTableProps) {
                     <Badge className={cn("badge-status border text-[10px] px-1.5 py-0", statusColors[consultant.status])}>
                       {consultant.status.charAt(0).toUpperCase() + consultant.status.slice(1)}
                     </Badge>
+                  </td>
+                  <td className="p-3">
+                    <span className="text-xs text-muted-foreground">
+                      {(consultant as any).addedByEmail || '-'}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <span className="text-xs text-muted-foreground">
+                      {consultant.lastUpdated || '-'}
+                    </span>
                   </td>
                   <td className="p-3">
                     {consultant.matchScore && (

@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       consultants: {
         Row: {
+          added_by_email: string | null
           ai_summary: string | null
           created_at: string | null
           email: string
@@ -33,6 +34,7 @@ export type Database = {
           visa_status: Database["public"]["Enums"]["visa_status"]
         }
         Insert: {
+          added_by_email?: string | null
           ai_summary?: string | null
           created_at?: string | null
           email: string
@@ -50,6 +52,7 @@ export type Database = {
           visa_status: Database["public"]["Enums"]["visa_status"]
         }
         Update: {
+          added_by_email?: string | null
           ai_summary?: string | null
           created_at?: string | null
           email?: string

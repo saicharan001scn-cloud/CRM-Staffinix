@@ -1,27 +1,49 @@
+import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Users, Briefcase, Send, DollarSign } from 'lucide-react';
 import { TeamPerformance } from '@/components/analytics/TeamPerformance';
+import { TimeFilter, TimeFilterType } from '@/components/analytics/TimeFilter';
+import { DateRange } from 'react-day-picker';
+import { subDays, format, differenceInDays } from 'date-fns';
 
-const submissionTrend = [
-  { name: 'Week 1', value: 45 },
-  { name: 'Week 2', value: 52 },
-  { name: 'Week 3', value: 48 },
-  { name: 'Week 4', value: 61 },
-  { name: 'Week 5', value: 55 },
-  { name: 'Week 6', value: 72 },
-];
+// Mock data generator based on date range
+const generateSubmissionTrend = (dateRange: DateRange | undefined) => {
+  if (!dateRange?.from || !dateRange?.to) return [];
+  
+  const days = differenceInDays(dateRange.to, dateRange.from);
+  const dataPoints = Math.min(days, 12);
+  const interval = Math.max(1, Math.floor(days / dataPoints));
+  
+  const data = [];
+  for (let i = 0; i < dataPoints; i++) {
+    const date = subDays(dateRange.to, (dataPoints - i - 1) * interval);
+    data.push({
+      name: days <= 14 ? format(date, 'MMM dd') : format(date, 'MMM dd'),
+      value: Math.floor(Math.random() * 30) + 35,
+    });
+  }
+  return data;
+};
 
-const placementRevenue = [
-  { name: 'Jan', value: 45000 },
-  { name: 'Feb', value: 52000 },
-  { name: 'Mar', value: 48000 },
-  { name: 'Apr', value: 61000 },
-  { name: 'May', value: 55000 },
-  { name: 'Jun', value: 72000 },
-];
+const generateRevenueData = (dateRange: DateRange | undefined) => {
+  if (!dateRange?.from || !dateRange?.to) return [];
+  
+  const days = differenceInDays(dateRange.to, dateRange.from);
+  const dataPoints = Math.min(days <= 14 ? 7 : 6, Math.ceil(days / 7));
+  
+  const data = [];
+  for (let i = 0; i < dataPoints; i++) {
+    const date = subDays(dateRange.to, (dataPoints - i - 1) * Math.floor(days / dataPoints));
+    data.push({
+      name: format(date, 'MMM dd'),
+      value: Math.floor(Math.random() * 30000) + 40000,
+    });
+  }
+  return data;
+};
 
 const vendorPerformance = [
   { name: 'TechStaff', submissions: 156, placements: 23 },
@@ -38,12 +60,51 @@ const statusDistribution = [
 ];
 
 export default function Analytics() {
+  const [activeFilter, setActiveFilter] = useState<TimeFilterType>('weekly');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 7),
+    to: new Date(),
+  });
+
+  const submissionTrend = generateSubmissionTrend(dateRange);
+  const placementRevenue = generateRevenueData(dateRange);
+
+  const getFilterLabel = () => {
+    switch (activeFilter) {
+      case 'weekly':
+        return 'Last 7 days';
+      case 'monthly':
+        return 'Last 30 days';
+      case 'quarterly':
+        return 'Last 90 days';
+      case 'custom':
+        return dateRange?.from && dateRange?.to
+          ? `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`
+          : 'Custom range';
+    }
+  };
+
   return (
     <MainLayout
       title="Analytics"
       subtitle="Insights and performance metrics"
       showBackButton={false}
     >
+      {/* Time Filter */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <TimeFilter
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+          />
+          <Badge variant="outline" className="text-xs">
+            {getFilterLabel()}
+          </Badge>
+        </div>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-6 mb-8">
         <Card className="p-6">
@@ -113,7 +174,7 @@ export default function Analytics() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                 <Tooltip 
                   contentStyle={{ 
@@ -129,12 +190,12 @@ export default function Analytics() {
         </Card>
 
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Monthly Revenue</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Revenue</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={placementRevenue}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v/1000}k`} />
                 <Tooltip 
                   contentStyle={{ 
