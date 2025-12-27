@@ -4,12 +4,12 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { ConsultantTable } from '@/components/consultants/ConsultantTable';
 import { ConsultantFilters } from '@/components/consultants/ConsultantFilters';
 import { AddConsultantModal, NewConsultant } from '@/components/consultants/AddConsultantModal';
-import { useConsultants } from '@/hooks/useConsultants';
+import { mockConsultants } from '@/data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Grid3X3, List, Search, X, MoreVertical, User, FileText, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Grid3X3, List, Search, X, MoreVertical, User, FileText, Pencil, Trash2 } from 'lucide-react';
 import { Consultant } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -37,13 +37,13 @@ const statusColors: Record<string, string> = {
 
 export default function Consultants() {
   const navigate = useNavigate();
-  const { consultants, isLoading, addConsultant, deleteConsultant } = useConsultants();
   const [statusFilter, setStatusFilter] = useState('all');
   const [visaFilter, setVisaFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
+  const [consultants, setConsultants] = useState(mockConsultants);
 
   const filteredConsultants = consultants.filter((consultant) => {
     const matchesStatus = statusFilter === 'all' || consultant.status === statusFilter;
@@ -70,33 +70,25 @@ export default function Consultants() {
   };
 
   const handleDelete = (consultant: Consultant) => {
-    deleteConsultant.mutate(consultant.id);
+    toast.error(`Delete ${consultant.name} - Coming soon`);
   };
 
   const handleAddConsultant = (newConsultant: NewConsultant) => {
-    addConsultant.mutate({
-      firstName: newConsultant.firstName,
-      lastName: newConsultant.lastName,
-      email: newConsultant.email,
-      phone: newConsultant.phone,
+    const consultant: Consultant = {
+      id: String(consultants.length + 1),
+      name: `${newConsultant.firstName} ${newConsultant.lastName}`,
+      email: newConsultant.email || '',
+      phone: newConsultant.phone || '',
       visaStatus: newConsultant.visaStatus,
-      skills: [...newConsultant.skills, ...newConsultant.secondarySkills],
+      skills: newConsultant.skills,
       rate: newConsultant.rate,
       status: newConsultant.status,
       location: newConsultant.location,
-      experience: newConsultant.yearsOfExperience,
-    });
+      experience: 0,
+      lastUpdated: new Date().toISOString().split('T')[0],
+    };
+    setConsultants([consultant, ...consultants]);
   };
-
-  if (isLoading) {
-    return (
-      <MainLayout title="Consultants" subtitle="Loading..." showBackButton={false}>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </MainLayout>
-    );
-  }
 
   return (
     <MainLayout
