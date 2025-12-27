@@ -9,12 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import staffinixLogo from '@/assets/staffinix-logo.png';
 import { z } from 'zod';
 
-const COMPANY_DOMAIN = 'company.com';
-
-const emailSchema = z.string().email('Invalid email format').refine(
-  (email) => email.toLowerCase().endsWith(`@${COMPANY_DOMAIN}`),
-  { message: `Please use your company email (@${COMPANY_DOMAIN})` }
-);
+const emailSchema = z.string().email('Please enter a valid email address');
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -99,7 +94,7 @@ export default function ForgotPassword() {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="email"
-                  placeholder={`you@${COMPANY_DOMAIN}`}
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
