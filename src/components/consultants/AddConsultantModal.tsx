@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Plus, Save, RotateCcw, Upload, FileText, Phone } from 'lucide-react';
+import { X, Plus, Save, RotateCcw, Upload, FileText, Phone, User, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { VisaStatus, ConsultantStatus } from '@/types';
-
+import { useAuth } from '@/hooks/useAuth';
 interface AddConsultantModalProps {
   open: boolean;
   onClose: () => void;
@@ -68,6 +68,7 @@ const countryCodes = [
 const noticePeriodOptions = ['Immediate', '1 Week', '2 Weeks', '1 Month', '2 Months', '3 Months'];
 
 export function AddConsultantModal({ open, onClose, onAdd }: AddConsultantModalProps) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<NewConsultant>({
     firstName: '',
     lastName: '',
@@ -93,6 +94,9 @@ export function AddConsultantModal({ open, onClose, onAdd }: AddConsultantModalP
   const [roleInput, setRoleInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const addedByEmail = user?.email || 'Unknown';
+  const addedAt = new Date().toLocaleString();
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -592,6 +596,38 @@ export function AddConsultantModal({ open, onClose, onAdd }: AddConsultantModalP
                 onChange={(e) => setFormData({ ...formData, linkedinProfile: e.target.value })}
                 placeholder="https://linkedin.com/in/johndoe"
               />
+            </div>
+          </div>
+
+          {/* Section 5: Record Information (Read-only) */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-foreground border-b border-border pb-1">Record Information</h3>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  Added By
+                </Label>
+                <Input
+                  value={addedByEmail}
+                  readOnly
+                  disabled
+                  className="bg-muted/50 text-muted-foreground"
+                />
+              </div>
+              <div>
+                <Label className="text-xs flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Date Added
+                </Label>
+                <Input
+                  value={addedAt}
+                  readOnly
+                  disabled
+                  className="bg-muted/50 text-muted-foreground"
+                />
+              </div>
             </div>
           </div>
         </div>
