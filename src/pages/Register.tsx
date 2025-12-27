@@ -3,8 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Lock, Mail, LogIn, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, UserPlus, Loader2, Eye, EyeOff, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import staffinixLogo from '@/assets/staffinix-logo.png';
@@ -17,17 +16,27 @@ const emailSchema = z.string().email('Invalid email format').refine(
   { message: `Please use your company email (@${COMPANY_DOMAIN})` }
 );
 
-const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
+const passwordSchema = z.string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number');
 
-export default function Login() {
+interface PasswordRequirement {
+  label: string;
+  met: boolean;
+}
+
+export default function Register() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, signIn } = useAuth();
+  const { user, loading: authLoading, signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
 
   useEffect(() => {
     if (user) {
@@ -35,17 +44,15 @@ export default function Login() {
     }
   }, [user, navigate]);
 
-  // Load remembered email
-  useEffect(() => {
-    const rememberedEmail = localStorage.getItem('rememberedEmail');
-    if (rememberedEmail) {
-      setEmail(rememberedEmail);
-      setRememberMe(true);
-    }
-  }, []);
+  const passwordRequirements: PasswordRequirement[] = [
+    { label: 'At least 8 characters', met: password.length >= 8 },
+    { label: 'One uppercase letter', met: /[A-Z]/.test(password) },
+    { label: 'One lowercase letter', met: /[a-z]/.test(password) },
+    { label: 'One number', met: /[0-9]/.test(password) },
+  ];
 
   const validateForm = (): boolean => {
-    const newErrors: { email?: string; password?: string } = {};
+    const newErrors: { email?: string; password?: string; confirmPassword?: string } = {};
     
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
@@ -55,6 +62,10 @@ export default function Login() {
     const passwordResult = passwordSchema.safeParse(password);
     if (!passwordResult.success) {
       newErrors.password = passwordResult.error.errors[0].message;
+    }
+
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
     }
     
     setErrors(newErrors);
@@ -69,33 +80,24 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signUp(email, password);
       
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('Invalid credentials', {
-            description: 'Please check your email and password'
-          });
-        } else if (error.message.includes('Email not confirmed')) {
-          toast.error('Account not verified', {
-            description: 'Please check your email to verify your account'
+        if (error.message.includes('already registered') || error.message.includes('already been registered')) {
+          toast.error('Email already registered', {
+            description: 'Please sign in instead or use a different email'
           });
         } else {
-          toast.error('Login failed', { description: error.message });
+          toast.error('Registration failed', { description: error.message });
         }
       } else {
-        // Handle remember me
-        if (rememberMe) {
-          localStorage.setItem('rememberedEmail', email);
-        } else {
-          localStorage.removeItem('rememberedEmail');
-        }
-        
-        toast.success('Welcome back!');
-        navigate('/');
+        toast.success('Account created successfully!', {
+          description: 'You can now sign in to your account'
+        });
+        navigate('/login');
       }
     } catch (err) {
-      toast.error('An error occurred');
+      toast.error('An error occurred during registration');
     } finally {
       setIsLoading(false);
     }
@@ -117,9 +119,9 @@ export default function Login() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-4">
             <img src={staffinixLogo} alt="Staffinix" className="w-14 h-14 rounded-xl" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
+          <h1 className="text-2xl font-bold text-foreground">Create Account</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            Sign in to your Staffinix CRM account
+            Join Staffinix CRM to manage your recruitment
           </p>
         </div>
 
@@ -127,7 +129,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Field */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Email Address</label>
+              <label className="text-sm font-medium text-foreground">Work Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -143,9 +145,7 @@ export default function Login() {
                 />
               </div>
               {errors.email && (
-                <p className="text-xs text-destructive flex items-center gap-1">
-                  {errors.email}
-                </p>
+                <p className="text-xs text-destructive">{errors.email}</p>
               )}
             </div>
 
@@ -156,14 +156,14 @@ export default function Login() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
+                  placeholder="Create a strong password"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
                     setErrors((prev) => ({ ...prev, password: undefined }));
                   }}
                   className={`pl-10 pr-10 h-11 ${errors.password ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
@@ -173,29 +173,58 @@ export default function Login() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-xs text-destructive">{errors.password}</p>
+              
+              {/* Password Requirements */}
+              {password.length > 0 && (
+                <div className="grid grid-cols-2 gap-1.5 mt-2">
+                  {passwordRequirements.map((req, idx) => (
+                    <div key={idx} className="flex items-center gap-1.5 text-xs">
+                      {req.met ? (
+                        <Check className="w-3 h-3 text-green-500" />
+                      ) : (
+                        <X className="w-3 h-3 text-muted-foreground" />
+                      )}
+                      <span className={req.met ? 'text-green-500' : 'text-muted-foreground'}>
+                        {req.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="remember"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+            {/* Confirm Password Field */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Confirm Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                  }}
+                  className={`pl-10 pr-10 h-11 ${errors.confirmPassword ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                  autoComplete="new-password"
                 />
-                <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
-                  Remember me
-                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
-              <Link 
-                to="/forgot-password" 
-                className="text-sm text-primary hover:text-primary/80 hover:underline transition-colors"
-              >
-                Forgot password?
-              </Link>
+              {errors.confirmPassword && (
+                <p className="text-xs text-destructive">{errors.confirmPassword}</p>
+              )}
+              {confirmPassword && password === confirmPassword && !errors.confirmPassword && (
+                <p className="text-xs text-green-500 flex items-center gap-1">
+                  <Check className="w-3 h-3" /> Passwords match
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -207,9 +236,9 @@ export default function Login() {
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <LogIn className="w-4 h-4" />
+                <UserPlus className="w-4 h-4" />
               )}
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Creating account...' : 'Create Account'}
             </Button>
           </form>
 
@@ -219,20 +248,20 @@ export default function Login() {
               <div className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-card px-2 text-muted-foreground">New to Staffinix?</span>
+              <span className="bg-card px-2 text-muted-foreground">Already have an account?</span>
             </div>
           </div>
 
-          {/* Register Link */}
-          <Link to="/register">
+          {/* Login Link */}
+          <Link to="/login">
             <Button variant="outline" className="w-full h-11">
-              Create an Account
+              Sign In Instead
             </Button>
           </Link>
         </Card>
 
         <p className="text-xs text-muted-foreground text-center mt-6">
-          Only @{COMPANY_DOMAIN} emails are allowed for registration
+          By creating an account, you agree to our Terms of Service
         </p>
       </div>
     </div>
