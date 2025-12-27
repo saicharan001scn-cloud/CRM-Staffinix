@@ -7,6 +7,8 @@ import { SubmissionsProvider } from "./context/SubmissionsContext";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Consultants from "./pages/Consultants";
 import ConsultantProfile from "./pages/ConsultantProfile";
@@ -34,6 +36,8 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/consultants" element={<ProtectedRoute><Consultants /></ProtectedRoute>} />
               <Route path="/consultants/:consultantId" element={<ProtectedRoute><ConsultantProfile /></ProtectedRoute>} />
