@@ -9,10 +9,12 @@ import {
   BarChart3, 
   Bot, 
   Settings,
-  LogOut
+  LogOut,
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import staffinixLogo from '@/assets/staffinix-logo.png';
 
@@ -31,6 +33,7 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
 
   const handleLogout = async () => {
     await signOut();
@@ -74,8 +77,20 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Settings */}
-      <div className="p-3 border-t border-sidebar-border">
+      {/* Settings & Admin */}
+      <div className="p-3 border-t border-sidebar-border space-y-1">
+        {isAdmin && (
+          <Link
+            to="/admin"
+            className={cn(
+              "nav-link",
+              location.pathname === '/admin' && "nav-link-active"
+            )}
+          >
+            <ShieldCheck className="w-5 h-5 shrink-0 nav-icon transition-transform" />
+            <span>Admin Panel</span>
+          </Link>
+        )}
         <Link
           to="/settings"
           className={cn(

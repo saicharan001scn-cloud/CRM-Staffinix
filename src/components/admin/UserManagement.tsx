@@ -1,0 +1,287 @@
+import { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useAdminData } from '@/hooks/useAdminData';
+import { CreateUserModal } from './CreateUserModal';
+import { 
+  Search, 
+  Plus, 
+  MoreHorizontal, 
+  UserCheck, 
+  UserX, 
+  Shield, 
+  Edit,
+  Mail,
+  Filter
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import type { AppRole, AccountStatus } from '@/types/admin';
+
+export function UserManagement() {
+  const { users, loading, updateUserStatus, updateUserRole, refetch, isSuperAdmin } = useAdminData();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<AccountStatus | 'all'>('all');
+  const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.company_name?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || user.account_status === statusFilter;
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+
+    return matchesSearch && matchesStatus && matchesRole;
+  });
+
+  const handleStatusChange = async (userId: string, status: AccountStatus) => {
+    const success = await updateUserStatus(userId, status);
+    if (success) {
+      toast.success(`User status updated to ${status}`);
+    } else {
+      toast.error('Failed to update user status');
+    }
+  };
+
+  const handleRoleChange = async (userId: string, role: AppRole) => {
+    const success = await updateUserRole(userId, role);
+    if (success) {
+      toast.success(`User role updated to ${role}`);
+    } else {
+      toast.error('Failed to update user role');
+    }
+  };
+
+  const getRoleBadgeColor = (role?: AppRole) => {
+    switch (role) {
+      case 'super_admin': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+      case 'admin': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  const getStatusBadgeColor = (status: AccountStatus) => {
+    switch (status) {
+      case 'active': return 'bg-success/20 text-success border-success/30';
+      case 'suspended': return 'bg-destructive/20 text-destructive border-destructive/30';
+      case 'pending': return 'bg-warning/20 text-warning border-warning/30';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card className="p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-10 bg-muted rounded w-1/3" />
+          <div className="h-64 bg-muted rounded" />
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        <div className="flex items-center gap-2 flex-1">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as AccountStatus | 'all')}>
+            <SelectTrigger className="w-32">
+              <Filter className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as AppRole | 'all')}>
+            <SelectTrigger className="w-32">
+              <Shield className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="super_admin">Super Admin</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="user">User</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {isSuperAdmin && (
+          <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add User
+          </Button>
+        )}
+      </div>
+
+      {/* Users Table */}
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead>Last Login</TableHead>
+              <TableHead>Joined</TableHead>
+              <TableHead className="w-12"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-xs font-medium text-primary">
+                        {(user.full_name || user.email || '?').slice(0, 2).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{user.full_name || 'No name'}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className={getRoleBadgeColor(user.role)}>
+                    {user.role?.replace('_', ' ').toUpperCase() || 'USER'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className={getStatusBadgeColor(user.account_status)}>
+                    {user.account_status.toUpperCase()}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {user.department || '-'}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  {user.last_login 
+                    ? format(new Date(user.last_login), 'MMM d, yyyy')
+                    : 'Never'}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  {format(new Date(user.created_at), 'MMM d, yyyy')}
+                </TableCell>
+                <TableCell>
+                  {isSuperAdmin && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem className="gap-2">
+                          <Edit className="w-4 h-4" />
+                          Edit Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2">
+                          <Mail className="w-4 h-4" />
+                          Send Email
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="gap-2"
+                          onClick={() => handleRoleChange(user.user_id, 'admin')}
+                          disabled={user.role === 'admin'}
+                        >
+                          <Shield className="w-4 h-4" />
+                          Make Admin
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="gap-2"
+                          onClick={() => handleRoleChange(user.user_id, 'user')}
+                          disabled={user.role === 'user'}
+                        >
+                          <Shield className="w-4 h-4" />
+                          Make User
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {user.account_status === 'active' ? (
+                          <DropdownMenuItem 
+                            className="gap-2 text-destructive"
+                            onClick={() => handleStatusChange(user.user_id, 'suspended')}
+                          >
+                            <UserX className="w-4 h-4" />
+                            Suspend User
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem 
+                            className="gap-2 text-success"
+                            onClick={() => handleStatusChange(user.user_id, 'active')}
+                          >
+                            <UserCheck className="w-4 h-4" />
+                            Activate User
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {filteredUsers.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  No users found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+
+      <CreateUserModal 
+        open={isCreateModalOpen} 
+        onOpenChange={setIsCreateModalOpen}
+        onSuccess={() => {
+          refetch();
+          setIsCreateModalOpen(false);
+        }}
+      />
+    </div>
+  );
+}
