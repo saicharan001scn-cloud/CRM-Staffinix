@@ -19,9 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Eye, EyeOff, Copy, RefreshCw } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Copy, RefreshCw, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import type { AppRole } from '@/types/admin';
@@ -44,7 +50,8 @@ interface CreateUserModalProps {
 }
 
 export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserModalProps) {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+  const { isSuperAdmin, canCreateSuperAdmin, canCreateAdmin, canCreateUser } = usePermissions();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
@@ -61,6 +68,15 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Get available roles based on permissions
+  const getAvailableRoles = (): { value: AppRole; label: string; disabled: boolean }[] => {
+    return [
+      { value: 'user', label: 'User', disabled: !canCreateUser },
+      { value: 'admin', label: 'Admin', disabled: !canCreateAdmin },
+      { value: 'super_admin', label: 'Super Admin', disabled: !canCreateSuperAdmin },
+    ];
+  };
 
   const generatePassword = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
@@ -80,6 +96,17 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
     e.preventDefault();
     setErrors({});
 
+    // Validate role permissions
+    if (formData.role === 'super_admin' && !canCreateSuperAdmin) {
+      toast.error("You don't have permission to create Super Admins");
+      return;
+    }
+
+    if (formData.role === 'admin' && !canCreateAdmin) {
+      toast.error("You don't have permission to create Admins");
+      return;
+    }
+
     // Validate form
     const result = createUserSchema.safeParse(formData);
     if (!result.success) {
@@ -98,7 +125,10 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
     try {
       // Call edge function to create user
       const { data, error } = await supabase.functions.invoke('create-user', {
-        body: formData,
+        body: {
+          ...formData,
+          created_by: user?.id, // Track who created this user
+        },
       });
 
       if (error) throw error;
@@ -137,6 +167,8 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
       setLoading(false);
     }
   };
+
+  const availableRoles = getAvailableRoles();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -224,7 +256,19 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
           <div className="grid grid-cols-2 gap-4">
             {/* Role */}
             <div className="space-y-2">
-              <Label htmlFor="role">Role *</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="role">Role *</Label>
+                {!isSuperAdmin && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">You can only create users with roles equal or below your own</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
               <Select
                 value={formData.role}
                 onValueChange={(v) => setFormData(prev => ({ ...prev, role: v as AppRole }))}
@@ -233,9 +277,15 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                  {availableRoles.map(role => (
+                    <SelectItem 
+                      key={role.value} 
+                      value={role.value}
+                      disabled={role.disabled}
+                    >
+                      {role.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
