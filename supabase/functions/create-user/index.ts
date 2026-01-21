@@ -53,18 +53,29 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if requesting user is super admin
-    const { data: isSuperAdmin, error: roleError } = await supabaseAdmin
+    // Check if requesting user is admin or super admin
+    const { data: isSuperAdmin } = await supabaseAdmin
       .rpc('is_super_admin', { _user_id: requestingUser.id });
+    
+    const { data: isAdmin } = await supabaseAdmin
+      .rpc('is_admin', { _user_id: requestingUser.id });
 
-    if (roleError || !isSuperAdmin) {
+    if (!isSuperAdmin && !isAdmin) {
       return new Response(
-        JSON.stringify({ error: "Only super admins can create users" }),
+        JSON.stringify({ error: "Only admins can create users" }),
         { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
     const { email, password, full_name, role, company_name, phone, department, notes }: CreateUserRequest = await req.json();
+
+    // Validate role permissions
+    if (role === 'super_admin' && !isSuperAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Only super admins can create super admin users" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     if (!email || !password || !full_name || !role) {
       return new Response(
