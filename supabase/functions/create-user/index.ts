@@ -91,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Update the profile with additional fields
+    // Update the profile with additional fields including created_by
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .update({
@@ -101,6 +101,7 @@ const handler = async (req: Request): Promise<Response> => {
         department,
         notes,
         account_status: 'active',
+        created_by: requestingUser.id, // Track who created this user
       })
       .eq('user_id', newUser.user.id);
 

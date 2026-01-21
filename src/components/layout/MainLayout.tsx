@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { GlobalSearch } from './GlobalSearch';
 import { NotificationDropdown } from './NotificationDropdown';
 import { BackButton } from './BackButton';
+import { AdminWatermark } from '@/components/ui/admin-watermark';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -62,6 +63,9 @@ export function MainLayout({ children, title, subtitle, action, showBackButton =
           {children}
         </main>
       </div>
+
+      {/* Admin View Watermark */}
+      <AdminWatermark />
     </div>
   );
 }

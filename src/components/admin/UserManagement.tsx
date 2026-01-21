@@ -12,31 +12,29 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useAdminData } from '@/hooks/useAdminData';
+import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { CreateUserModal } from './CreateUserModal';
+import { UserActionsDropdown } from './UserActionsDropdown';
 import { 
   Search, 
   Plus, 
-  MoreHorizontal, 
-  UserCheck, 
-  UserX, 
   Shield, 
-  Edit,
-  Mail,
-  Filter
+  Filter,
+  Crown,
+  Info
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -44,12 +42,26 @@ import type { AppRole, AccountStatus } from '@/types/admin';
 
 export function UserManagement() {
   const { users, loading, updateUserStatus, updateUserRole, refetch, isSuperAdmin } = useAdminData();
+  const { user } = useAuth();
+  const { canCreateUser, canCreateAdmin, canViewAllUsers, isAdmin } = usePermissions();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<AccountStatus | 'all'>('all');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const filteredUsers = users.filter(user => {
+  // Filter users based on permissions
+  const visibleUsers = users.filter(u => {
+    // Super admins can see everyone
+    if (isSuperAdmin) return true;
+    
+    // Admins cannot see super admins
+    if (isAdmin && u.role === 'super_admin') return false;
+    
+    // Admins can see themselves and users they created (or all for now)
+    return true;
+  });
+
+  const filteredUsers = visibleUsers.filter(user => {
     const matchesSearch = 
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,27 +75,28 @@ export function UserManagement() {
 
   const handleStatusChange = async (userId: string, status: AccountStatus) => {
     const success = await updateUserStatus(userId, status);
-    if (success) {
-      toast.success(`User status updated to ${status}`);
-    } else {
+    if (!success) {
       toast.error('Failed to update user status');
     }
+    return success;
   };
 
   const handleRoleChange = async (userId: string, role: AppRole) => {
     const success = await updateUserRole(userId, role);
-    if (success) {
-      toast.success(`User role updated to ${role}`);
-    } else {
+    if (!success) {
       toast.error('Failed to update user role');
     }
+    return success;
   };
 
   const getRoleBadgeColor = (role?: AppRole) => {
     switch (role) {
-      case 'super_admin': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'admin': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      default: return 'bg-muted text-muted-foreground';
+      case 'super_admin': 
+        return 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 border-amber-500/30';
+      case 'admin': 
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      default: 
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -94,6 +107,18 @@ export function UserManagement() {
       case 'pending': return 'bg-warning/20 text-warning border-warning/30';
       default: return 'bg-muted text-muted-foreground';
     }
+  };
+
+  const handleViewProfile = (userId: string) => {
+    toast.info('Opening user profile...');
+  };
+
+  const handleEditUser = (userId: string) => {
+    toast.info('Opening user editor...');
+  };
+
+  const handleViewActivityLog = (userId: string) => {
+    toast.info('Opening activity log...');
   };
 
   if (loading) {
@@ -107,8 +132,36 @@ export function UserManagement() {
     );
   }
 
+  // Get role options based on current user's permissions
+  const getRoleOptions = () => {
+    const options = [
+      { value: 'all', label: 'All Roles' },
+      { value: 'user', label: 'User' },
+    ];
+    
+    if (isAdmin || isSuperAdmin) {
+      options.push({ value: 'admin', label: 'Admin' });
+    }
+    
+    if (isSuperAdmin) {
+      options.push({ value: 'super_admin', label: 'Super Admin' });
+    }
+    
+    return options;
+  };
+
   return (
     <div className="space-y-4">
+      {/* Info banner for admins */}
+      {isAdmin && !isSuperAdmin && (
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-center gap-3">
+          <Info className="w-5 h-5 text-blue-400 shrink-0" />
+          <p className="text-sm text-blue-300">
+            As an Admin, you can manage Admins and Users. Super Admins are hidden from this view.
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <div className="flex items-center gap-2 flex-1">
@@ -139,14 +192,15 @@ export function UserManagement() {
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="super_admin">Super Admin</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="user">User</SelectItem>
+              {getRoleOptions().map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-        {isSuperAdmin && (
+        {(canCreateUser || canCreateAdmin) && (
           <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
             <Plus className="w-4 h-4" />
             Add User
@@ -165,101 +219,70 @@ export function UserManagement() {
               <TableHead>Department</TableHead>
               <TableHead>Last Login</TableHead>
               <TableHead>Joined</TableHead>
-              <TableHead className="w-12"></TableHead>
+              <TableHead className="w-12">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map((user) => (
-              <TableRow key={user.id}>
+            {filteredUsers.map((u) => (
+              <TableRow key={u.id} className="group">
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span className="text-xs font-medium text-primary">
-                        {(user.full_name || user.email || '?').slice(0, 2).toUpperCase()}
-                      </span>
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                      u.role === 'super_admin' 
+                        ? 'bg-gradient-to-br from-amber-500/30 to-yellow-500/30 ring-2 ring-amber-500/20' 
+                        : u.role === 'admin'
+                        ? 'bg-blue-500/20'
+                        : 'bg-primary/20'
+                    }`}>
+                      {u.role === 'super_admin' ? (
+                        <Crown className="w-4 h-4 text-amber-400" />
+                      ) : (
+                        <span className="text-xs font-medium text-primary">
+                          {(u.full_name || u.email || '?').slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{user.full_name || 'No name'}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                      <p className="font-medium text-foreground">{u.full_name || 'No name'}</p>
+                      <p className="text-xs text-muted-foreground">{u.email}</p>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={getRoleBadgeColor(user.role)}>
-                    {user.role?.replace('_', ' ').toUpperCase() || 'USER'}
+                  <Badge variant="outline" className={getRoleBadgeColor(u.role)}>
+                    {u.role === 'super_admin' && <Crown className="w-3 h-3 mr-1" />}
+                    {u.role?.replace('_', ' ').toUpperCase() || 'USER'}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={getStatusBadgeColor(user.account_status)}>
-                    {user.account_status.toUpperCase()}
+                  <Badge variant="outline" className={getStatusBadgeColor(u.account_status)}>
+                    {u.account_status.toUpperCase()}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {user.department || '-'}
+                  {u.department || '-'}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {user.last_login 
-                    ? format(new Date(user.last_login), 'MMM d, yyyy')
+                  {u.last_login 
+                    ? format(new Date(u.last_login), 'MMM d, yyyy')
                     : 'Never'}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {format(new Date(user.created_at), 'MMM d, yyyy')}
+                  {format(new Date(u.created_at), 'MMM d, yyyy')}
                 </TableCell>
                 <TableCell>
-                  {isSuperAdmin && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="gap-2">
-                          <Edit className="w-4 h-4" />
-                          Edit Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2">
-                          <Mail className="w-4 h-4" />
-                          Send Email
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="gap-2"
-                          onClick={() => handleRoleChange(user.user_id, 'admin')}
-                          disabled={user.role === 'admin'}
-                        >
-                          <Shield className="w-4 h-4" />
-                          Make Admin
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="gap-2"
-                          onClick={() => handleRoleChange(user.user_id, 'user')}
-                          disabled={user.role === 'user'}
-                        >
-                          <Shield className="w-4 h-4" />
-                          Make User
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {user.account_status === 'active' ? (
-                          <DropdownMenuItem 
-                            className="gap-2 text-destructive"
-                            onClick={() => handleStatusChange(user.user_id, 'suspended')}
-                          >
-                            <UserX className="w-4 h-4" />
-                            Suspend User
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem 
-                            className="gap-2 text-success"
-                            onClick={() => handleStatusChange(user.user_id, 'active')}
-                          >
-                            <UserCheck className="w-4 h-4" />
-                            Activate User
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                  <UserActionsDropdown
+                    userId={u.user_id}
+                    userEmail={u.email || undefined}
+                    userName={u.full_name || undefined}
+                    currentRole={u.role}
+                    currentStatus={u.account_status}
+                    onStatusChange={handleStatusChange}
+                    onRoleChange={handleRoleChange}
+                    onViewProfile={handleViewProfile}
+                    onEditUser={handleEditUser}
+                    onViewActivityLog={handleViewActivityLog}
+                  />
                 </TableCell>
               </TableRow>
             ))}

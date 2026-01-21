@@ -10,30 +10,28 @@ import {
   Bot, 
   Settings,
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  Crown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import staffinixLogo from '@/assets/staffinix-logo.png';
-
-const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-  { icon: Users, label: 'Consultants', path: '/consultants' },
-  { icon: Briefcase, label: 'Job Requirements', path: '/jobs' },
-  { icon: Building2, label: 'Vendors', path: '/vendors' },
-  { icon: Send, label: 'Submissions', path: '/submissions' },
-  { icon: Mail, label: 'Email Automation', path: '/emails' },
-  { icon: BarChart3, label: 'Analytics', path: '/analytics' },
-  { icon: Bot, label: 'AI Assistant', path: '/assistant' },
-];
 
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { isAdmin } = useUserRole();
+  const { 
+    canAccessAdminPanel, 
+    canViewAnalytics, 
+    isSuperAdmin, 
+    isAdmin,
+    getRoleBadgeStyles,
+    getRoleLabel 
+  } = usePermissions();
 
   const handleLogout = async () => {
     await signOut();
@@ -42,6 +40,19 @@ export function Sidebar() {
 
   const userEmail = user?.email || 'User';
   const userInitials = userEmail.split('@')[0].slice(0, 2).toUpperCase();
+  const roleStyles = getRoleBadgeStyles();
+
+  // Build nav items based on permissions
+  const navItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/', visible: true },
+    { icon: Users, label: 'Consultants', path: '/consultants', visible: true },
+    { icon: Briefcase, label: 'Job Requirements', path: '/jobs', visible: true },
+    { icon: Building2, label: 'Vendors', path: '/vendors', visible: true },
+    { icon: Send, label: 'Submissions', path: '/submissions', visible: true },
+    { icon: Mail, label: 'Email Automation', path: '/emails', visible: true },
+    { icon: BarChart3, label: 'Analytics', path: '/analytics', visible: canViewAnalytics },
+    { icon: Bot, label: 'AI Assistant', path: '/assistant', visible: true },
+  ].filter(item => item.visible);
 
   return (
     <aside 
@@ -79,7 +90,7 @@ export function Sidebar() {
 
       {/* Settings & Admin */}
       <div className="p-3 border-t border-sidebar-border space-y-1">
-        {isAdmin && (
+        {canAccessAdminPanel && (
           <Link
             to="/admin"
             className={cn(
@@ -106,11 +117,28 @@ export function Sidebar() {
       {/* User Profile */}
       <div className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-            <span className="text-sm font-medium text-primary">{userInitials}</span>
+          <div className={cn(
+            "w-10 h-10 rounded-full flex items-center justify-center",
+            isSuperAdmin ? "bg-gradient-to-br from-amber-500/30 to-yellow-500/30 ring-2 ring-amber-500/30" :
+            isAdmin ? "bg-blue-500/20 ring-2 ring-blue-500/20" :
+            "bg-primary/20"
+          )}>
+            {isSuperAdmin ? (
+              <Crown className="w-5 h-5 text-amber-400" />
+            ) : (
+              <span className="text-sm font-medium text-primary">{userInitials}</span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{userEmail.split('@')[0]}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-foreground truncate">{userEmail.split('@')[0]}</p>
+              <Badge 
+                variant="outline" 
+                className={cn("text-[10px] px-1.5 py-0", roleStyles.bg, roleStyles.text, roleStyles.border)}
+              >
+                {getRoleLabel()}
+              </Badge>
+            </div>
             <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
           </div>
           <Button 

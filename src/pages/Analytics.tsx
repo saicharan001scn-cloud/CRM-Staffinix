@@ -3,11 +3,15 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Users, Briefcase, Send, DollarSign } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, TrendingDown, Users, Briefcase, Send, DollarSign, Lock, Info } from 'lucide-react';
 import { TeamPerformance } from '@/components/analytics/TeamPerformance';
 import { TimeFilter, TimeFilterType } from '@/components/analytics/TimeFilter';
 import { DateRange } from 'react-day-picker';
 import { subDays, format, differenceInDays } from 'date-fns';
+import { usePermissions } from '@/hooks/usePermissions';
+import { RoleBasedContent, SuperAdminOnly } from '@/components/layout/RoleBasedContent';
+import { toast } from 'sonner';
 
 // Mock data generator based on date range
 const generateSubmissionTrend = (dateRange: DateRange | undefined) => {
@@ -65,6 +69,8 @@ export default function Analytics() {
     from: subDays(new Date(), 7),
     to: new Date(),
   });
+  
+  const { isSuperAdmin, isAdmin, canViewAllAnalytics, canExportAllData } = usePermissions();
 
   const submissionTrend = generateSubmissionTrend(dateRange);
   const placementRevenue = generateRevenueData(dateRange);
@@ -84,12 +90,39 @@ export default function Analytics() {
     }
   };
 
+  // Apply restrictions for admins - limit date range options
+  const getRestrictedDateRangeOptions = () => {
+    if (isSuperAdmin) {
+      return ['weekly', 'monthly', 'quarterly', 'custom'] as TimeFilterType[];
+    }
+    // Admins can only see limited date ranges
+    return ['weekly', 'monthly'] as TimeFilterType[];
+  };
+
+  const handleExportAll = () => {
+    if (!canExportAllData) {
+      toast.error("You don't have permission to export all data");
+      return;
+    }
+    toast.success('Exporting all data...');
+  };
+
   return (
     <MainLayout
       title="Analytics"
-      subtitle="Insights and performance metrics"
+      subtitle={isAdmin && !isSuperAdmin ? "Team performance metrics" : "Insights and performance metrics"}
       showBackButton={false}
     >
+      {/* Admin notice */}
+      {isAdmin && !isSuperAdmin && (
+        <div className="mb-6 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-center gap-3">
+          <Info className="w-5 h-5 text-blue-400 shrink-0" />
+          <p className="text-sm text-blue-300">
+            Viewing team analytics only. Platform-wide statistics are available to Super Admins.
+          </p>
+        </div>
+      )}
+
       {/* Time Filter */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
@@ -99,9 +132,32 @@ export default function Analytics() {
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
           />
-          <Badge variant="outline" className="text-xs">
-            {getFilterLabel()}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-xs">
+              {getFilterLabel()}
+            </Badge>
+            <SuperAdminOnly>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleExportAll}
+                className="gap-2"
+              >
+                Export All Data
+              </Button>
+            </SuperAdminOnly>
+            {isAdmin && !isSuperAdmin && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled
+                className="gap-2 opacity-50"
+              >
+                <Lock className="w-3 h-3" />
+                Export All Data
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -116,8 +172,12 @@ export default function Analytics() {
               <TrendingUp className="w-3 h-3" /> 23%
             </Badge>
           </div>
-          <p className="text-3xl font-bold text-foreground">324</p>
-          <p className="text-sm text-muted-foreground">Total Submissions</p>
+          <p className="text-3xl font-bold text-foreground">
+            {isAdmin && !isSuperAdmin ? '89' : '324'}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {isAdmin && !isSuperAdmin ? 'Team Submissions' : 'Total Submissions'}
+          </p>
         </Card>
 
         <Card className="p-6">
@@ -129,8 +189,12 @@ export default function Analytics() {
               <TrendingUp className="w-3 h-3" /> 15%
             </Badge>
           </div>
-          <p className="text-3xl font-bold text-foreground">28</p>
-          <p className="text-sm text-muted-foreground">Placements YTD</p>
+          <p className="text-3xl font-bold text-foreground">
+            {isAdmin && !isSuperAdmin ? '8' : '28'}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {isAdmin && !isSuperAdmin ? 'Team Placements' : 'Placements YTD'}
+          </p>
         </Card>
 
         <Card className="p-6">
@@ -146,24 +210,47 @@ export default function Analytics() {
           <p className="text-sm text-muted-foreground">Conversion Rate</p>
         </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-accent" />
+        {/* Revenue Card - Hidden from non-super admins */}
+        <SuperAdminOnly
+          fallback={
+            <Card className="p-6 opacity-50 relative">
+              <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm rounded-lg z-10">
+                <div className="text-center">
+                  <Lock className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">Super Admin Only</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-accent" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-foreground">$---K</p>
+              <p className="text-sm text-muted-foreground">Revenue YTD</p>
+            </Card>
+          }
+        >
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-accent" />
+              </div>
+              <Badge className="bg-success/20 text-success border-success/30 gap-1">
+                <TrendingUp className="w-3 h-3" /> 31%
+              </Badge>
             </div>
-            <Badge className="bg-success/20 text-success border-success/30 gap-1">
-              <TrendingUp className="w-3 h-3" /> 31%
-            </Badge>
-          </div>
-          <p className="text-3xl font-bold text-foreground">$333K</p>
-          <p className="text-sm text-muted-foreground">Revenue YTD</p>
-        </Card>
+            <p className="text-3xl font-bold text-foreground">$333K</p>
+            <p className="text-sm text-muted-foreground">Revenue YTD</p>
+          </Card>
+        </SuperAdminOnly>
       </div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-2 gap-6 mb-6">
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Submission Trend</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            {isAdmin && !isSuperAdmin ? 'Team Submission Trend' : 'Submission Trend'}
+          </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={submissionTrend}>
@@ -189,33 +276,61 @@ export default function Analytics() {
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Revenue</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={placementRevenue}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v/1000}k`} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    border: '1px solid hsl(var(--border))', 
-                    borderRadius: '8px' 
-                  }}
-                  formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
-                />
-                <Bar dataKey="value" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
+        {/* Revenue Chart - Super Admin Only */}
+        <SuperAdminOnly
+          fallback={
+            <Card className="p-6 relative">
+              <div className="absolute inset-0 flex items-center justify-center bg-card/90 backdrop-blur-sm rounded-lg z-10">
+                <div className="text-center">
+                  <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm font-medium text-muted-foreground">Financial Data Restricted</p>
+                  <p className="text-xs text-muted-foreground mt-1">Super Admin access required</p>
+                </div>
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Revenue</h3>
+              <div className="h-64 opacity-20">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={placementRevenue}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                    <Bar dataKey="value" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          }
+        >
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Revenue</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={placementRevenue}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v/1000}k`} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))', 
+                      borderRadius: '8px' 
+                    }}
+                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
+                  />
+                  <Bar dataKey="value" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </SuperAdminOnly>
       </div>
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-2 gap-6">
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Vendor Performance</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            {isAdmin && !isSuperAdmin ? 'Your Vendor Performance' : 'Vendor Performance'}
+          </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={vendorPerformance} layout="vertical">
