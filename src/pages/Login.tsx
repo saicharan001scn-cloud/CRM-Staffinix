@@ -208,22 +208,6 @@ export default function Login() {
             </Button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-card px-2 text-muted-foreground">New to Staffinix?</span>
-            </div>
-          </div>
-
-          {/* Register Link */}
-          <Link to="/register">
-            <Button variant="outline" className="w-full h-11">
-              Create an Account
-            </Button>
-          </Link>
         </Card>
 
         <p className="text-xs text-muted-foreground text-center mt-6">

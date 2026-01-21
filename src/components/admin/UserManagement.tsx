@@ -24,6 +24,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import { useAdminData } from '@/hooks/useAdminData';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -33,6 +39,7 @@ import { UserProfileModal } from './UserProfileModal';
 import { EditUserModal } from './EditUserModal';
 import { BulkActionsBar } from './BulkActionsBar';
 import { AnalyticsToggle } from './AnalyticsToggle';
+import { UserHierarchy } from './UserHierarchy';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Search, 
@@ -41,7 +48,9 @@ import {
   Filter,
   Crown,
   Info,
-  BarChart2
+  BarChart2,
+  Table as TableIcon,
+  FolderTree
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -58,6 +67,7 @@ export function UserManagement() {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [profileModalUserId, setProfileModalUserId] = useState<string | null>(null);
   const [editModalUserId, setEditModalUserId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'table' | 'hierarchy'>('table');
 
   // Filter users based on permissions
   const visibleUsers = users.filter(u => {
@@ -260,164 +270,193 @@ export function UserManagement() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
-        <div className="flex items-center gap-2 flex-1">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as AccountStatus | 'all')}>
-            <SelectTrigger className="w-32">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="suspended">Suspended</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as AppRole | 'all')}>
-            <SelectTrigger className="w-32">
-              <Shield className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              {getRoleOptions().map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* View Mode Tabs + Header */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          {/* View Toggle */}
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'table' | 'hierarchy')} className="w-auto">
+            <TabsList className="grid grid-cols-2 w-[200px]">
+              <TabsTrigger value="table" className="gap-2">
+                <TableIcon className="w-4 h-4" />
+                Table
+              </TabsTrigger>
+              <TabsTrigger value="hierarchy" className="gap-2">
+                <FolderTree className="w-4 h-4" />
+                Hierarchy
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {(canCreateUser || canCreateAdmin) && (
+            <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add User
+            </Button>
+          )}
         </div>
-        {(canCreateUser || canCreateAdmin) && (
-          <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add User
-          </Button>
+
+        {/* Filters (only for table view) */}
+        {viewMode === 'table' && (
+          <div className="flex items-center gap-2 flex-1">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as AccountStatus | 'all')}>
+              <SelectTrigger className="w-32">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="suspended">Suspended</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as AppRole | 'all')}>
+              <SelectTrigger className="w-32">
+                <Shield className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Role" />
+              </SelectTrigger>
+              <SelectContent>
+                {getRoleOptions().map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
       </div>
 
-      {/* Users Table */}
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">
-                <Checkbox 
-                  checked={selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0}
-                  onCheckedChange={toggleAllSelection}
-                />
-              </TableHead>
-              <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>
-                <div className="flex items-center gap-1">
-                  <BarChart2 className="w-4 h-4" />
-                  Analytics
-                </div>
-              </TableHead>
-              <TableHead>Department</TableHead>
-              <TableHead>Last Login</TableHead>
-              <TableHead className="w-12">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredUsers.map((u) => (
-              <TableRow key={u.id} className="group">
-                <TableCell>
-                  <Checkbox 
-                    checked={selectedUserIds.includes(u.user_id)}
-                    onCheckedChange={() => toggleUserSelection(u.user_id)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
-                      u.role === 'super_admin' 
-                        ? 'bg-gradient-to-br from-amber-500/30 to-yellow-500/30 ring-2 ring-amber-500/20' 
-                        : u.role === 'admin'
-                        ? 'bg-blue-500/20'
-                        : 'bg-primary/20'
-                    }`}>
-                      {u.role === 'super_admin' ? (
-                        <Crown className="w-4 h-4 text-amber-400" />
-                      ) : (
-                        <span className="text-xs font-medium text-primary">
-                          {(u.full_name || u.email || '?').slice(0, 2).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{u.full_name || 'No name'}</p>
-                      <p className="text-xs text-muted-foreground">{u.email}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={getRoleBadgeColor(u.role)}>
-                    {u.role === 'super_admin' && <Crown className="w-3 h-3 mr-1" />}
-                    {u.role?.replace('_', ' ').toUpperCase() || 'USER'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={getStatusBadgeColor(u.account_status)}>
-                    {u.account_status.toUpperCase()}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <AnalyticsToggle
-                    userId={u.user_id}
-                    userRole={u.role}
-                    currentState={(u as any).can_view_analytics || false}
-                    createdBy={(u as any).created_by}
-                    onChange={() => refetch()}
-                  />
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {u.department || '-'}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {u.last_login 
-                    ? format(new Date(u.last_login), 'MMM d, yyyy')
-                    : 'Never'}
-                </TableCell>
-                <TableCell>
-                  <UserActionsDropdown
-                    userId={u.user_id}
-                    userEmail={u.email || undefined}
-                    userName={u.full_name || undefined}
-                    currentRole={u.role}
-                    currentStatus={u.account_status}
-                    createdBy={(u as any).created_by}
-                    onStatusChange={handleStatusChange}
-                    onRoleChange={handleRoleChange}
-                    onViewProfile={handleViewProfile}
-                    onEditUser={handleEditUser}
-                    onViewActivityLog={handleViewActivityLog}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredUsers.length === 0 && (
+      {/* Content based on view mode */}
+      {viewMode === 'hierarchy' ? (
+        <UserHierarchy
+          onViewProfile={handleViewProfile}
+          onEditUser={handleEditUser}
+          onViewActivityLog={handleViewActivityLog}
+        />
+      ) : (
+        /* Users Table */
+        <Card>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  No users found
-                </TableCell>
+                <TableHead className="w-12">
+                  <Checkbox 
+                    checked={selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0}
+                    onCheckedChange={toggleAllSelection}
+                  />
+                </TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>
+                  <div className="flex items-center gap-1">
+                    <BarChart2 className="w-4 h-4" />
+                    Analytics
+                  </div>
+                </TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead>Last Login</TableHead>
+                <TableHead className="w-12">Actions</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.map((u) => (
+                <TableRow key={u.id} className="group">
+                  <TableCell>
+                    <Checkbox 
+                      checked={selectedUserIds.includes(u.user_id)}
+                      onCheckedChange={() => toggleUserSelection(u.user_id)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                        u.role === 'super_admin' 
+                          ? 'bg-gradient-to-br from-amber-500/30 to-yellow-500/30 ring-2 ring-amber-500/20' 
+                          : u.role === 'admin'
+                          ? 'bg-blue-500/20'
+                          : 'bg-primary/20'
+                      }`}>
+                        {u.role === 'super_admin' ? (
+                          <Crown className="w-4 h-4 text-amber-400" />
+                        ) : (
+                          <span className="text-xs font-medium text-primary">
+                            {(u.full_name || u.email || '?').slice(0, 2).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{u.full_name || 'No name'}</p>
+                        <p className="text-xs text-muted-foreground">{u.email}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={getRoleBadgeColor(u.role)}>
+                      {u.role === 'super_admin' && <Crown className="w-3 h-3 mr-1" />}
+                      {u.role?.replace('_', ' ').toUpperCase() || 'USER'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={getStatusBadgeColor(u.account_status)}>
+                      {u.account_status.toUpperCase()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <AnalyticsToggle
+                      userId={u.user_id}
+                      userRole={u.role}
+                      currentState={(u as any).can_view_analytics || false}
+                      createdBy={(u as any).created_by}
+                      onChange={() => refetch()}
+                    />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {u.department || '-'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {u.last_login 
+                      ? format(new Date(u.last_login), 'MMM d, yyyy')
+                      : 'Never'}
+                  </TableCell>
+                  <TableCell>
+                    <UserActionsDropdown
+                      userId={u.user_id}
+                      userEmail={u.email || undefined}
+                      userName={u.full_name || undefined}
+                      currentRole={u.role}
+                      currentStatus={u.account_status}
+                      createdBy={(u as any).created_by}
+                      onStatusChange={handleStatusChange}
+                      onRoleChange={handleRoleChange}
+                      onViewProfile={handleViewProfile}
+                      onEditUser={handleEditUser}
+                      onViewActivityLog={handleViewActivityLog}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filteredUsers.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    No users found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
 
       {/* Modals */}
       <CreateUserModal 
