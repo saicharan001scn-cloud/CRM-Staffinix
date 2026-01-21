@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, Users, Briefcase, Send, DollarSign, Lock, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Briefcase, Send, DollarSign, Lock, Info, ShieldX } from 'lucide-react';
 import { TeamPerformance } from '@/components/analytics/TeamPerformance';
 import { TimeFilter, TimeFilterType } from '@/components/analytics/TimeFilter';
 import { DateRange } from 'react-day-picker';
 import { subDays, format, differenceInDays } from 'date-fns';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/hooks/useAuth';
 import { RoleBasedContent, SuperAdminOnly } from '@/components/layout/RoleBasedContent';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Mock data generator based on date range
@@ -64,16 +67,75 @@ const statusDistribution = [
 ];
 
 export default function Analytics() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState<TimeFilterType>('weekly');
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 7),
     to: new Date(),
   });
+  const [hasAnalyticsAccess, setHasAnalyticsAccess] = useState<boolean | null>(null);
+  const [loadingAccess, setLoadingAccess] = useState(true);
   
   const { isSuperAdmin, isAdmin, canViewAllAnalytics, canExportAllData } = usePermissions();
 
+  // Check if user has analytics access
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!user) return;
+      
+      // Admins and Super Admins always have access
+      if (isAdmin || isSuperAdmin) {
+        setHasAnalyticsAccess(true);
+        setLoadingAccess(false);
+        return;
+      }
+      
+      // Regular users need can_view_analytics permission
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('can_view_analytics')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (error) throw error;
+        setHasAnalyticsAccess(data?.can_view_analytics || false);
+      } catch (error) {
+        console.error('Error checking analytics access:', error);
+        setHasAnalyticsAccess(false);
+      } finally {
+        setLoadingAccess(false);
+      }
+    };
+    
+    checkAccess();
+  }, [user, isAdmin, isSuperAdmin]);
+
   const submissionTrend = generateSubmissionTrend(dateRange);
   const placementRevenue = generateRevenueData(dateRange);
+
+  // Show access restricted if user doesn't have permission
+  if (!loadingAccess && !hasAnalyticsAccess && !isAdmin && !isSuperAdmin) {
+    return (
+      <MainLayout
+        title="Analytics"
+        subtitle="Insights and performance metrics"
+        showBackButton={false}
+      >
+        <Card className="p-12 text-center">
+          <ShieldX className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">Access Restricted</h2>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            You don't have permission to view analytics. Contact your administrator to request access.
+          </p>
+          <Button variant="outline" onClick={() => navigate('/dashboard')}>
+            Return to Dashboard
+          </Button>
+        </Card>
+      </MainLayout>
+    );
+  }
 
   const getFilterLabel = () => {
     switch (activeFilter) {

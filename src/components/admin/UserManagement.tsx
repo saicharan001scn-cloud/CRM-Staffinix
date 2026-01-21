@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -28,13 +29,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { CreateUserModal } from './CreateUserModal';
 import { UserActionsDropdown } from './UserActionsDropdown';
+import { UserProfileModal } from './UserProfileModal';
+import { EditUserModal } from './EditUserModal';
+import { BulkActionsBar } from './BulkActionsBar';
+import { AnalyticsToggle } from './AnalyticsToggle';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Search, 
   Plus, 
   Shield, 
   Filter,
   Crown,
-  Info
+  Info,
+  BarChart2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -48,6 +55,9 @@ export function UserManagement() {
   const [statusFilter, setStatusFilter] = useState<AccountStatus | 'all'>('all');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [profileModalUserId, setProfileModalUserId] = useState<string | null>(null);
+  const [editModalUserId, setEditModalUserId] = useState<string | null>(null);
 
   // Filter users based on permissions
   const visibleUsers = users.filter(u => {
@@ -89,6 +99,85 @@ export function UserManagement() {
     return success;
   };
 
+  const handleBulkAction = async (action: string, userIds: string[]) => {
+    switch (action) {
+      case 'grant_analytics':
+        await supabase
+          .from('profiles')
+          .update({ 
+            can_view_analytics: true,
+            analytics_access_granted_by: user?.id,
+            analytics_access_granted_at: new Date().toISOString(),
+          })
+          .in('user_id', userIds);
+        break;
+      case 'revoke_analytics':
+        await supabase
+          .from('profiles')
+          .update({ 
+            can_view_analytics: false,
+            analytics_access_granted_by: null,
+            analytics_access_granted_at: null,
+          })
+          .in('user_id', userIds);
+        break;
+      case 'suspend':
+        await supabase
+          .from('profiles')
+          .update({ account_status: 'suspended' })
+          .in('user_id', userIds);
+        break;
+      case 'activate':
+        await supabase
+          .from('profiles')
+          .update({ account_status: 'active' })
+          .in('user_id', userIds);
+        break;
+      case 'export':
+        const exportUsers = users.filter(u => userIds.includes(u.user_id));
+        const csvContent = [
+          ['Name', 'Email', 'Role', 'Status', 'Department', 'Analytics Access', 'Joined'].join(','),
+          ...exportUsers.map(u => [
+            u.full_name || '',
+            u.email || '',
+            u.role || 'user',
+            u.account_status,
+            u.department || '',
+            (u as any).can_view_analytics ? 'Yes' : 'No',
+            u.created_at,
+          ].join(','))
+        ].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `users-export-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+        a.click();
+        break;
+      case 'send_email':
+        toast.info(`Opening email composer for ${userIds.length} users`);
+        break;
+    }
+    await refetch();
+  };
+
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUserIds(prev => 
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const toggleAllSelection = () => {
+    if (selectedUserIds.length === filteredUsers.length) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(filteredUsers.map(u => u.user_id));
+    }
+  };
+
   const getRoleBadgeColor = (role?: AppRole) => {
     switch (role) {
       case 'super_admin': 
@@ -110,27 +199,17 @@ export function UserManagement() {
   };
 
   const handleViewProfile = (userId: string) => {
-    toast.info('Opening user profile...');
+    setProfileModalUserId(userId);
   };
 
   const handleEditUser = (userId: string) => {
-    toast.info('Opening user editor...');
+    setEditModalUserId(userId);
   };
 
   const handleViewActivityLog = (userId: string) => {
     toast.info('Opening activity log...');
+    // Could navigate to activity tab with filter
   };
-
-  if (loading) {
-    return (
-      <Card className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-muted rounded w-1/3" />
-          <div className="h-64 bg-muted rounded" />
-        </div>
-      </Card>
-    );
-  }
 
   // Get role options based on current user's permissions
   const getRoleOptions = () => {
@@ -150,8 +229,27 @@ export function UserManagement() {
     return options;
   };
 
+  if (loading) {
+    return (
+      <Card className="p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-10 bg-muted rounded w-1/3" />
+          <div className="h-64 bg-muted rounded" />
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {/* Bulk Actions Bar */}
+      <BulkActionsBar
+        selectedCount={selectedUserIds.length}
+        selectedUserIds={selectedUserIds}
+        onClearSelection={() => setSelectedUserIds([])}
+        onBulkAction={handleBulkAction}
+      />
+
       {/* Info banner for admins */}
       {isAdmin && !isSuperAdmin && (
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-center gap-3">
@@ -213,18 +311,35 @@ export function UserManagement() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox 
+                  checked={selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0}
+                  onCheckedChange={toggleAllSelection}
+                />
+              </TableHead>
               <TableHead>User</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  <BarChart2 className="w-4 h-4" />
+                  Analytics
+                </div>
+              </TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Last Login</TableHead>
-              <TableHead>Joined</TableHead>
               <TableHead className="w-12">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredUsers.map((u) => (
               <TableRow key={u.id} className="group">
+                <TableCell>
+                  <Checkbox 
+                    checked={selectedUserIds.includes(u.user_id)}
+                    onCheckedChange={() => toggleUserSelection(u.user_id)}
+                  />
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
@@ -259,6 +374,15 @@ export function UserManagement() {
                     {u.account_status.toUpperCase()}
                   </Badge>
                 </TableCell>
+                <TableCell>
+                  <AnalyticsToggle
+                    userId={u.user_id}
+                    userRole={u.role}
+                    currentState={(u as any).can_view_analytics || false}
+                    createdBy={(u as any).created_by}
+                    onChange={() => refetch()}
+                  />
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {u.department || '-'}
                 </TableCell>
@@ -267,9 +391,6 @@ export function UserManagement() {
                     ? format(new Date(u.last_login), 'MMM d, yyyy')
                     : 'Never'}
                 </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {format(new Date(u.created_at), 'MMM d, yyyy')}
-                </TableCell>
                 <TableCell>
                   <UserActionsDropdown
                     userId={u.user_id}
@@ -277,6 +398,7 @@ export function UserManagement() {
                     userName={u.full_name || undefined}
                     currentRole={u.role}
                     currentStatus={u.account_status}
+                    createdBy={(u as any).created_by}
                     onStatusChange={handleStatusChange}
                     onRoleChange={handleRoleChange}
                     onViewProfile={handleViewProfile}
@@ -288,7 +410,7 @@ export function UserManagement() {
             ))}
             {filteredUsers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   No users found
                 </TableCell>
               </TableRow>
@@ -297,6 +419,7 @@ export function UserManagement() {
         </Table>
       </Card>
 
+      {/* Modals */}
       <CreateUserModal 
         open={isCreateModalOpen} 
         onOpenChange={setIsCreateModalOpen}
@@ -304,6 +427,19 @@ export function UserManagement() {
           refetch();
           setIsCreateModalOpen(false);
         }}
+      />
+
+      <UserProfileModal
+        open={!!profileModalUserId}
+        onOpenChange={(open) => !open && setProfileModalUserId(null)}
+        userId={profileModalUserId}
+      />
+
+      <EditUserModal
+        open={!!editModalUserId}
+        onOpenChange={(open) => !open && setEditModalUserId(null)}
+        userId={editModalUserId}
+        onSuccess={refetch}
       />
     </div>
   );

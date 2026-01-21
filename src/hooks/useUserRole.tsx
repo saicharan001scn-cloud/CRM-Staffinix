@@ -58,19 +58,33 @@ export function useUserRole(): UserRoleState {
   };
 }
 
-// Hook to log activity
+// Enhanced activity logger with visibility support
 export function useActivityLogger() {
   const { user } = useAuth();
+  const { role, isSuperAdmin } = useUserRole();
 
   const logActivity = async (
     action: string,
     entityType?: string,
     entityId?: string,
-    details?: Record<string, unknown>
+    details?: Record<string, unknown>,
+    targetUserId?: string
   ) => {
     if (!user) return;
 
     try {
+      // Fetch current user's created_by chain
+      let createdByChain: string[] = [];
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('created_by')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (profile?.created_by) {
+        createdByChain = [profile.created_by];
+      }
+
       const insertData = {
         user_id: user.id,
         action,
@@ -78,6 +92,12 @@ export function useActivityLogger() {
         entity_id: entityId || null,
         details: details ? JSON.parse(JSON.stringify(details)) : null,
         user_agent: navigator.userAgent,
+        // New visibility fields
+        visibility_scope: isSuperAdmin ? 'global' : 'team',
+        is_super_admin_activity: isSuperAdmin,
+        target_user_id: targetUserId || null,
+        performer_role: role,
+        created_by_chain: createdByChain,
       };
       await supabase.from('activity_logs').insert([insertData]);
     } catch (error) {
