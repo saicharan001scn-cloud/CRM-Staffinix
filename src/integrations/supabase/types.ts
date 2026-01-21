@@ -18,35 +18,50 @@ export type Database = {
         Row: {
           action: string
           created_at: string | null
+          created_by_chain: Json | null
           details: Json | null
           entity_id: string | null
           entity_type: string | null
           id: string
           ip_address: string | null
+          is_super_admin_activity: boolean | null
+          performer_role: string | null
+          target_user_id: string | null
           user_agent: string | null
           user_id: string | null
+          visibility_scope: string | null
         }
         Insert: {
           action: string
           created_at?: string | null
+          created_by_chain?: Json | null
           details?: Json | null
           entity_id?: string | null
           entity_type?: string | null
           id?: string
           ip_address?: string | null
+          is_super_admin_activity?: boolean | null
+          performer_role?: string | null
+          target_user_id?: string | null
           user_agent?: string | null
           user_id?: string | null
+          visibility_scope?: string | null
         }
         Update: {
           action?: string
           created_at?: string | null
+          created_by_chain?: Json | null
           details?: Json | null
           entity_id?: string | null
           entity_type?: string | null
           id?: string
           ip_address?: string | null
+          is_super_admin_activity?: boolean | null
+          performer_role?: string | null
+          target_user_id?: string | null
           user_agent?: string | null
           user_id?: string | null
+          visibility_scope?: string | null
         }
         Relationships: []
       }
@@ -219,7 +234,10 @@ export type Database = {
       profiles: {
         Row: {
           account_status: Database["public"]["Enums"]["account_status"] | null
+          analytics_access_granted_at: string | null
+          analytics_access_granted_by: string | null
           avatar_url: string | null
+          can_view_analytics: boolean | null
           company_name: string | null
           created_at: string
           created_by: string | null
@@ -235,7 +253,10 @@ export type Database = {
         }
         Insert: {
           account_status?: Database["public"]["Enums"]["account_status"] | null
+          analytics_access_granted_at?: string | null
+          analytics_access_granted_by?: string | null
           avatar_url?: string | null
+          can_view_analytics?: boolean | null
           company_name?: string | null
           created_at?: string
           created_by?: string | null
@@ -251,7 +272,10 @@ export type Database = {
         }
         Update: {
           account_status?: Database["public"]["Enums"]["account_status"] | null
+          analytics_access_granted_at?: string | null
+          analytics_access_granted_by?: string | null
           avatar_url?: string | null
+          can_view_analytics?: boolean | null
           company_name?: string | null
           created_at?: string
           created_by?: string | null

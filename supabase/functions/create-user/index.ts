@@ -15,6 +15,7 @@ interface CreateUserRequest {
   phone?: string;
   department?: string;
   notes?: string;
+  can_view_analytics?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -67,7 +68,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, password, full_name, role, company_name, phone, department, notes }: CreateUserRequest = await req.json();
+    const { email, password, full_name, role, company_name, phone, department, notes, can_view_analytics }: CreateUserRequest = await req.json();
 
     // Validate role permissions
     if (role === 'super_admin' && !isSuperAdmin) {

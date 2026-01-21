@@ -24,10 +24,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Eye, EyeOff, Copy, RefreshCw, Info } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Copy, RefreshCw, Info, BarChart2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import type { AppRole } from '@/types/admin';
@@ -41,6 +42,7 @@ const createUserSchema = z.object({
   phone: z.string().optional(),
   department: z.string().optional(),
   notes: z.string().optional(),
+  can_view_analytics: z.boolean().optional(),
 });
 
 interface CreateUserModalProps {
@@ -65,6 +67,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
     phone: '',
     department: '',
     notes: '',
+    can_view_analytics: false,
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -159,6 +162,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
         phone: '',
         department: '',
         notes: '',
+        can_view_analytics: false,
       });
     } catch (error) {
       console.error('Error creating user:', error);
@@ -335,6 +339,31 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               placeholder="Additional notes about this user..."
               rows={2}
+            />
+          </div>
+
+          {/* Analytics Access */}
+          <div className="flex items-center justify-between py-3 px-4 bg-muted/50 rounded-lg border">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <BarChart2 className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <Label htmlFor="can_view_analytics" className="font-medium cursor-pointer">
+                  Analytics Access
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {formData.role === 'admin' || formData.role === 'super_admin' 
+                    ? 'Admins automatically have analytics access'
+                    : 'Allow this user to view analytics dashboard'}
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="can_view_analytics"
+              checked={formData.role === 'admin' || formData.role === 'super_admin' || formData.can_view_analytics}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, can_view_analytics: checked }))}
+              disabled={formData.role === 'admin' || formData.role === 'super_admin'}
             />
           </div>
 

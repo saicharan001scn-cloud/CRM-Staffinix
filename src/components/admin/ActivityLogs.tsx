@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -11,18 +11,46 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAdminData } from '@/hooks/useAdminData';
-import { Search, Activity, Filter, RefreshCw, Download } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
+import { ActivityFilter, ActivityScope } from './ActivityFilter';
+import { Search, Activity, Filter, RefreshCw, Download, Crown, Shield, User } from 'lucide-react';
 import { format } from 'date-fns';
 
 export function ActivityLogs() {
   const { activityLogs, users, loading, refetch } = useAdminData();
+  const { isSuperAdmin, isAdmin } = usePermissions();
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState<string>('all');
+  const [activityScope, setActivityScope] = useState<ActivityScope>('self');
 
   // Get unique actions for filter
   const uniqueActions = [...new Set(activityLogs.map(log => log.action))];
 
-  const filteredLogs = activityLogs.filter(log => {
+  // Filter logs based on activity scope and role
+  const scopeFilteredLogs = useMemo(() => {
+    return activityLogs.filter(log => {
+      // Hide super admin activities from non-super admins
+      if (!isSuperAdmin && (log as any).is_super_admin_activity) {
+        return false;
+      }
+
+      // Apply scope filter
+      switch (activityScope) {
+        case 'self':
+          return log.user_id === users.find(u => u.email)?.user_id;
+        case 'team':
+          // Show activities by users created by current admin
+          // Or activities on users created by current admin
+          return true; // RLS handles this at the database level
+        case 'all':
+          return isSuperAdmin; // Only super admins can see all
+        default:
+          return true;
+      }
+    });
+  }, [activityLogs, activityScope, isSuperAdmin, users]);
+
+  const filteredLogs = scopeFilteredLogs.filter(log => {
     const user = users.find(u => u.user_id === log.user_id);
     const matchesSearch = 
       log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -34,17 +62,37 @@ export function ActivityLogs() {
     return matchesSearch && matchesAction;
   });
 
+  // Calculate activity counts for filter badges
+  const activityCounts = useMemo(() => ({
+    self: activityLogs.filter(log => !((log as any).is_super_admin_activity && !isSuperAdmin)).length,
+    team: activityLogs.filter(log => !((log as any).is_super_admin_activity && !isSuperAdmin)).length,
+    all: isSuperAdmin ? activityLogs.length : 0,
+  }), [activityLogs, isSuperAdmin]);
+
   const getActionColor = (action: string) => {
     if (action.includes('created')) return 'bg-success/20 text-success border-success/30';
     if (action.includes('updated')) return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
     if (action.includes('deleted')) return 'bg-destructive/20 text-destructive border-destructive/30';
     if (action.includes('login')) return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+    if (action.includes('granted') || action.includes('analytics')) return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+    if (action.includes('revoked') || action.includes('suspended')) return 'bg-warning/20 text-warning border-warning/30';
     return 'bg-muted text-muted-foreground';
+  };
+
+  const getPerformerIcon = (log: any) => {
+    const performerRole = log.performer_role;
+    if (performerRole === 'super_admin') {
+      return <Crown className="w-4 h-4 text-amber-400" />;
+    }
+    if (performerRole === 'admin') {
+      return <Shield className="w-4 h-4 text-blue-400" />;
+    }
+    return <User className="w-4 h-4 text-muted-foreground" />;
   };
 
   const exportLogs = () => {
     const csvContent = [
-      ['Timestamp', 'User', 'Action', 'Entity Type', 'Entity ID', 'Details'].join(','),
+      ['Timestamp', 'User', 'Action', 'Entity Type', 'Entity ID', 'Visibility', 'Details'].join(','),
       ...filteredLogs.map(log => {
         const user = users.find(u => u.user_id === log.user_id);
         return [
@@ -53,6 +101,7 @@ export function ActivityLogs() {
           log.action,
           log.entity_type || '',
           log.entity_id || '',
+          (log as any).visibility_scope || 'team',
           JSON.stringify(log.details || {}),
         ].join(',');
       }),
@@ -79,6 +128,13 @@ export function ActivityLogs() {
 
   return (
     <div className="space-y-4">
+      {/* Activity Scope Filter */}
+      <ActivityFilter
+        selectedScope={activityScope}
+        onScopeChange={setActivityScope}
+        activityCounts={activityCounts}
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <div className="flex items-center gap-2 flex-1">
@@ -124,18 +180,32 @@ export function ActivityLogs() {
           <div className="p-8 text-center text-muted-foreground">
             <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p>No activity logs found</p>
+            <p className="text-sm mt-1">
+              {activityScope === 'self' && 'Try switching to Team or All activities'}
+              {activityScope === 'team' && 'No team activity yet'}
+            </p>
           </div>
         ) : (
           filteredLogs.map((log) => {
             const user = users.find(u => u.user_id === log.user_id);
+            const targetUser = (log as any).target_user_id 
+              ? users.find(u => u.user_id === (log as any).target_user_id)
+              : null;
+            
             return (
               <div key={log.id} className="p-4 hover:bg-muted/50 transition-colors">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                    <Activity className="w-5 h-5 text-primary" />
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                    (log as any).performer_role === 'super_admin'
+                      ? 'bg-gradient-to-br from-amber-500/20 to-yellow-500/20'
+                      : (log as any).performer_role === 'admin'
+                      ? 'bg-blue-500/20'
+                      : 'bg-primary/20'
+                  }`}>
+                    {getPerformerIcon(log)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <Badge variant="outline" className={getActionColor(log.action)}>
                         {log.action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </Badge>
@@ -144,9 +214,24 @@ export function ActivityLogs() {
                           on {log.entity_type}
                         </span>
                       )}
+                      {(log as any).is_super_admin_activity && (
+                        <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-xs">
+                          Super Admin
+                        </Badge>
+                      )}
+                      {(log as any).visibility_scope === 'private' && (
+                        <Badge variant="outline" className="text-xs">
+                          Private
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm text-foreground">
                       <span className="font-medium">{user?.full_name || user?.email || 'System'}</span>
+                      {targetUser && (
+                        <span className="text-muted-foreground">
+                          {' → '}<span className="text-foreground">{targetUser.full_name || targetUser.email}</span>
+                        </span>
+                      )}
                       {log.details && typeof log.details === 'object' && (
                         <span className="text-muted-foreground">
                           {' — '}
@@ -171,6 +256,7 @@ export function ActivityLogs() {
       {/* Pagination hint */}
       <p className="text-xs text-muted-foreground text-center">
         Showing {filteredLogs.length} of {activityLogs.length} activities
+        {!isSuperAdmin && ' (filtered by your permissions)'}
       </p>
     </div>
   );
