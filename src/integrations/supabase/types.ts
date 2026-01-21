@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       consultants: {
         Row: {
           added_by_email: string | null
@@ -150,34 +186,79 @@ export type Database = {
         }
         Relationships: []
       }
+      login_history: {
+        Row: {
+          failure_reason: string | null
+          id: string
+          ip_address: string | null
+          login_at: string | null
+          success: boolean | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          login_at?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          login_at?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          account_status: Database["public"]["Enums"]["account_status"] | null
           avatar_url: string | null
           company_name: string | null
           created_at: string
+          department: string | null
           email: string | null
           full_name: string | null
           id: string
+          last_login: string | null
+          notes: string | null
+          phone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          account_status?: Database["public"]["Enums"]["account_status"] | null
           avatar_url?: string | null
           company_name?: string | null
           created_at?: string
+          department?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          last_login?: string | null
+          notes?: string | null
+          phone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          account_status?: Database["public"]["Enums"]["account_status"] | null
           avatar_url?: string | null
           company_name?: string | null
           created_at?: string
+          department?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          last_login?: string | null
+          notes?: string | null
+          phone?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -347,6 +428,33 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          expires_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          expires_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          expires_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       vendors: {
         Row: {
           company_name: string
@@ -400,9 +508,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
+      account_status: "active" | "suspended" | "pending"
+      app_role: "super_admin" | "admin" | "user"
       consultant_status:
         | "bench"
         | "available"
@@ -557,6 +679,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_status: ["active", "suspended", "pending"],
+      app_role: ["super_admin", "admin", "user"],
       consultant_status: [
         "bench",
         "available",
