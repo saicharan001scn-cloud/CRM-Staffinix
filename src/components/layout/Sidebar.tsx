@@ -43,15 +43,16 @@ export function Sidebar() {
   const roleStyles = getRoleBadgeStyles();
 
   // Build nav items based on permissions
+  // Super Admin sees platform management, not operational pages
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/', visible: true },
-    { icon: Users, label: 'Consultants', path: '/consultants', visible: true },
-    { icon: Briefcase, label: 'Job Requirements', path: '/jobs', visible: true },
-    { icon: Building2, label: 'Vendors', path: '/vendors', visible: true },
-    { icon: Send, label: 'Submissions', path: '/submissions', visible: true },
-    { icon: Mail, label: 'Email Automation', path: '/emails', visible: true },
-    { icon: BarChart3, label: 'Analytics', path: '/analytics', visible: canViewAnalytics },
-    { icon: Bot, label: 'AI Assistant', path: '/assistant', visible: true },
+    { icon: Users, label: 'Consultants', path: '/consultants', visible: !isSuperAdmin },
+    { icon: Briefcase, label: 'Job Requirements', path: '/jobs', visible: !isSuperAdmin },
+    { icon: Building2, label: 'Vendors', path: '/vendors', visible: !isSuperAdmin },
+    { icon: Send, label: 'Submissions', path: '/submissions', visible: !isSuperAdmin },
+    { icon: Mail, label: 'Email Automation', path: '/emails', visible: !isSuperAdmin },
+    { icon: BarChart3, label: 'Analytics', path: '/analytics', visible: canViewAnalytics && !isSuperAdmin },
+    { icon: Bot, label: 'AI Assistant', path: '/assistant', visible: !isSuperAdmin },
   ].filter(item => item.visible);
 
   return (

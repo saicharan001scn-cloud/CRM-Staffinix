@@ -171,10 +171,26 @@ export default function Analytics() {
 
   return (
     <MainLayout
-      title="Analytics"
-      subtitle={isAdmin && !isSuperAdmin ? "Team performance metrics" : "Insights and performance metrics"}
+      title={isAdmin && !isSuperAdmin ? "Company Analytics" : "Analytics"}
+      subtitle={isAdmin && !isSuperAdmin ? "🔒 Confidential • Your company's performance metrics" : "Insights and performance metrics"}
       showBackButton={false}
     >
+      {/* Confidentiality Banner for Company Admins */}
+      {isAdmin && !isSuperAdmin && (
+        <div className="mb-6 bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Lock className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Confidential Analytics</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                This data is exclusive to your company. Platform administrators cannot access your company's analytics, 
+                ensuring complete privacy of your business metrics and performance data.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Admin notice */}
       {isAdmin && !isSuperAdmin && (
         <div className="mb-6 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-center gap-3">

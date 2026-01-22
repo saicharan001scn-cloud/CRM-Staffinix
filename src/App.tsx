@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SubmissionsProvider } from "./context/SubmissionsContext";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { OperationalRoute } from "./components/auth/OperationalRoute";
 import { AdminRoute } from "./components/auth/AdminRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -41,15 +42,15 @@ const App = () => (
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/consultants" element={<ProtectedRoute><Consultants /></ProtectedRoute>} />
-              <Route path="/consultants/:consultantId" element={<ProtectedRoute><ConsultantProfile /></ProtectedRoute>} />
-              <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
-              <Route path="/jobs/:jobId/matches" element={<ProtectedRoute><JobMatches /></ProtectedRoute>} />
-              <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
-              <Route path="/submissions" element={<ProtectedRoute><Submissions /></ProtectedRoute>} />
-              <Route path="/emails" element={<ProtectedRoute><Emails /></ProtectedRoute>} />
-              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-              <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
+              <Route path="/consultants" element={<OperationalRoute><Consultants /></OperationalRoute>} />
+              <Route path="/consultants/:consultantId" element={<OperationalRoute><ConsultantProfile /></OperationalRoute>} />
+              <Route path="/jobs" element={<OperationalRoute><Jobs /></OperationalRoute>} />
+              <Route path="/jobs/:jobId/matches" element={<OperationalRoute><JobMatches /></OperationalRoute>} />
+              <Route path="/vendors" element={<OperationalRoute><Vendors /></OperationalRoute>} />
+              <Route path="/submissions" element={<OperationalRoute><Submissions /></OperationalRoute>} />
+              <Route path="/emails" element={<OperationalRoute><Emails /></OperationalRoute>} />
+              <Route path="/analytics" element={<OperationalRoute><Analytics /></OperationalRoute>} />
+              <Route path="/assistant" element={<OperationalRoute><Assistant /></OperationalRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/settings/integrations" element={<ProtectedRoute><IntegrationsManagement /></ProtectedRoute>} />
               <Route path="/settings/api-keys" element={<ProtectedRoute><ApiKeysManagement /></ProtectedRoute>} />
