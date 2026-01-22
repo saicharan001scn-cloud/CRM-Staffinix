@@ -65,6 +65,74 @@ export type Database = {
         }
         Relationships: []
       }
+      company_subscriptions: {
+        Row: {
+          admin_user_id: string | null
+          auto_renew: boolean | null
+          billing_cycle: string | null
+          company_email: string
+          company_name: string
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          metadata: Json | null
+          payment_method: Json | null
+          plan_id: string | null
+          status: string
+          storage_used_gb: number | null
+          trial_ends_at: string | null
+          updated_at: string | null
+          users_count: number | null
+        }
+        Insert: {
+          admin_user_id?: string | null
+          auto_renew?: boolean | null
+          billing_cycle?: string | null
+          company_email: string
+          company_name: string
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: Json | null
+          plan_id?: string | null
+          status?: string
+          storage_used_gb?: number | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          users_count?: number | null
+        }
+        Update: {
+          admin_user_id?: string | null
+          auto_renew?: boolean | null
+          billing_cycle?: string | null
+          company_email?: string
+          company_name?: string
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: Json | null
+          plan_id?: string | null
+          status?: string
+          storage_used_gb?: number | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          users_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultants: {
         Row: {
           added_by_email: string | null
@@ -119,6 +187,51 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           visa_status?: Database["public"]["Enums"]["visa_status"]
+        }
+        Relationships: []
+      }
+      coupons: {
+        Row: {
+          applies_to_plans: string[] | null
+          code: string
+          created_at: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          times_used: number | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          applies_to_plans?: string[] | null
+          code: string
+          created_at?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          times_used?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          applies_to_plans?: string[] | null
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          times_used?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
         }
         Relationships: []
       }
@@ -230,6 +343,71 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          company_name: string
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          failure_reason: string | null
+          id: string
+          invoice_number: string | null
+          metadata: Json | null
+          payment_method: string | null
+          receipt_url: string | null
+          refund_reason: string | null
+          refunded_at: string | null
+          status: string
+          subscription_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          company_name: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          failure_reason?: string | null
+          id?: string
+          invoice_number?: string | null
+          metadata?: Json | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          refund_reason?: string | null
+          refunded_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          company_name?: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          failure_reason?: string | null
+          id?: string
+          invoice_number?: string | null
+          metadata?: Json | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          refund_reason?: string | null
+          refunded_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "company_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -454,6 +632,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_plans: {
+        Row: {
+          api_calls_per_month: number | null
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          is_popular: boolean | null
+          is_public: boolean | null
+          max_users: number | null
+          monthly_price: number
+          name: string
+          setup_fee: number | null
+          slug: string
+          sort_order: number | null
+          storage_gb: number | null
+          trial_days: number | null
+          updated_at: string | null
+          yearly_price: number
+        }
+        Insert: {
+          api_calls_per_month?: number | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          is_public?: boolean | null
+          max_users?: number | null
+          monthly_price?: number
+          name: string
+          setup_fee?: number | null
+          slug: string
+          sort_order?: number | null
+          storage_gb?: number | null
+          trial_days?: number | null
+          updated_at?: string | null
+          yearly_price?: number
+        }
+        Update: {
+          api_calls_per_month?: number | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          is_public?: boolean | null
+          max_users?: number | null
+          monthly_price?: number
+          name?: string
+          setup_fee?: number | null
+          slug?: string
+          sort_order?: number | null
+          storage_gb?: number | null
+          trial_days?: number | null
+          updated_at?: string | null
+          yearly_price?: number
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
