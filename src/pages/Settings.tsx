@@ -10,6 +10,7 @@ import {
   User, Bell, Shield, Palette, Link2, Mail, Database, Key, Globe, Zap, ChevronRight, Sun, Moon, Monitor
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AdminOnly } from '@/components/layout/RoleBasedContent';
 
 const integrations = [
   { name: 'SendGrid', status: 'connected', icon: Mail },
@@ -83,22 +84,24 @@ export default function Settings() {
             </div>
           </Card>
 
-          <Card className="p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-primary" />
-              Security
-            </h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
-                <div><p className="text-xs font-medium text-foreground">Two-Factor Authentication</p><p className="text-[10px] text-muted-foreground">Add extra security</p></div>
-                <Button variant="outline" size="sm" className="h-6 text-xs">Enable</Button>
+          <AdminOnly>
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-primary" />
+                Security
+              </h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                  <div><p className="text-xs font-medium text-foreground">Two-Factor Authentication</p><p className="text-[10px] text-muted-foreground">Add extra security</p></div>
+                  <Button variant="outline" size="sm" className="h-6 text-xs">Enable</Button>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                  <div><p className="text-xs font-medium text-foreground">Change Password</p><p className="text-[10px] text-muted-foreground">Last changed 30 days ago</p></div>
+                  <Button variant="outline" size="sm" className="h-6 text-xs">Update</Button>
+                </div>
               </div>
-              <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
-                <div><p className="text-xs font-medium text-foreground">Change Password</p><p className="text-[10px] text-muted-foreground">Last changed 30 days ago</p></div>
-                <Button variant="outline" size="sm" className="h-6 text-xs">Update</Button>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </AdminOnly>
         </div>
 
         <div className="space-y-4">
@@ -121,17 +124,19 @@ export default function Settings() {
             <Button variant="outline" size="sm" className="w-full mt-3 h-7 text-xs">Manage Integrations</Button>
           </Card>
 
-          <Card className="p-4 cursor-pointer hover:border-primary/50 transition-colors group" onClick={() => navigate('/settings/api-keys')}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Key className="w-4 h-4 text-primary" />API Keys</h3>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-            <div className="space-y-2">
-              <div className="p-2 bg-muted/50 rounded-lg"><p className="text-xs font-medium text-foreground">Production Key</p><p className="text-[10px] text-muted-foreground font-mono mt-0.5">sk_live_••••••••4x2k</p></div>
-              <div className="p-2 bg-muted/50 rounded-lg"><p className="text-xs font-medium text-foreground">Test Key</p><p className="text-[10px] text-muted-foreground font-mono mt-0.5">sk_test_••••••••8y3m</p></div>
-            </div>
-            <Button variant="outline" size="sm" className="w-full mt-3 h-7 text-xs">Manage API Keys</Button>
-          </Card>
+          <AdminOnly>
+            <Card className="p-4 cursor-pointer hover:border-primary/50 transition-colors group" onClick={() => navigate('/settings/api-keys')}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Key className="w-4 h-4 text-primary" />API Keys</h3>
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <div className="p-2 bg-muted/50 rounded-lg"><p className="text-xs font-medium text-foreground">Production Key</p><p className="text-[10px] text-muted-foreground font-mono mt-0.5">sk_live_••••••••4x2k</p></div>
+                <div className="p-2 bg-muted/50 rounded-lg"><p className="text-xs font-medium text-foreground">Test Key</p><p className="text-[10px] text-muted-foreground font-mono mt-0.5">sk_test_••••••••8y3m</p></div>
+              </div>
+              <Button variant="outline" size="sm" className="w-full mt-3 h-7 text-xs">Manage API Keys</Button>
+            </Card>
+          </AdminOnly>
 
           {/* Theme Toggle - Working */}
           <Card className="p-4">
