@@ -6,6 +6,7 @@ import { SubmissionChart } from '@/components/dashboard/SubmissionChart';
 import { SkillDemandChart } from '@/components/dashboard/SkillDemandChart';
 import { TopConsultants } from '@/components/dashboard/TopConsultants';
 import { HotJobs } from '@/components/dashboard/HotJobs';
+import { SuperAdminDashboard } from '@/components/dashboard/SuperAdminDashboard';
 import { AddConsultantModal, NewConsultant } from '@/components/consultants/AddConsultantModal';
 import { 
   mockDashboardStats, 
@@ -17,14 +18,29 @@ import {
 } from '@/data/mockData';
 import { Users, Briefcase, Send, Calendar, Building2, Sparkles, Target } from 'lucide-react';
 import { toast } from 'sonner';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export default function Dashboard() {
   const [showAddConsultant, setShowAddConsultant] = useState(false);
+  const { isSuperAdmin } = usePermissions();
 
   const handleAddConsultant = (consultant: NewConsultant) => {
     console.log('New consultant:', consultant);
     toast.success('Consultant added successfully!');
   };
+
+  // Super Admin sees platform dashboard instead of operational dashboard
+  if (isSuperAdmin) {
+    return (
+      <MainLayout 
+        title="Platform Dashboard" 
+        subtitle="Super Admin • Platform Management Overview"
+        showBackButton={false}
+      >
+        <SuperAdminDashboard />
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout 
