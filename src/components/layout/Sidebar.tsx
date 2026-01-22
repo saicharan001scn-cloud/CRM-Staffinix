@@ -11,7 +11,8 @@ import {
   Settings,
   LogOut,
   ShieldCheck,
-  Crown
+  Crown,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -88,9 +89,19 @@ export function Sidebar() {
           );
         })}
         
-        {/* Admin Panel & Settings - inline for Super Admin, bottom for others */}
+        {/* Admin Panel, Billing & Settings - inline for Super Admin */}
         {isSuperAdmin && (
           <>
+            <Link
+              to="/billing"
+              className={cn(
+                "nav-link",
+                location.pathname === '/billing' && "nav-link-active"
+              )}
+            >
+              <CreditCard className="w-5 h-5 shrink-0 nav-icon transition-transform" />
+              <span>Billing</span>
+            </Link>
             <Link
               to="/admin"
               className={cn(

@@ -25,6 +25,7 @@ import Settings from "./pages/Settings";
 import IntegrationsManagement from "./pages/IntegrationsManagement";
 import ApiKeysManagement from "./pages/ApiKeysManagement";
 import AdminPanel from "./pages/AdminPanel";
+import BillingManagement from "./pages/BillingManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/settings/integrations" element={<ProtectedRoute><IntegrationsManagement /></ProtectedRoute>} />
               <Route path="/settings/api-keys" element={<ProtectedRoute><ApiKeysManagement /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+              <Route path="/billing" element={<AdminRoute><BillingManagement /></AdminRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
