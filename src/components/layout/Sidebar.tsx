@@ -87,36 +87,64 @@ export function Sidebar() {
             </Link>
           );
         })}
+        
+        {/* Admin Panel & Settings - inline for Super Admin, bottom for others */}
+        {isSuperAdmin && (
+          <>
+            <Link
+              to="/admin"
+              className={cn(
+                "nav-link",
+                location.pathname === '/admin' && "nav-link-active"
+              )}
+            >
+              <ShieldCheck className="w-5 h-5 shrink-0 nav-icon transition-transform" />
+              <span>Admin Panel</span>
+            </Link>
+            <Link
+              to="/settings"
+              className={cn(
+                "nav-link",
+                location.pathname === '/settings' && "nav-link-active"
+              )}
+            >
+              <Settings className="w-5 h-5 shrink-0 nav-icon transition-transform" />
+              <span>Settings</span>
+            </Link>
+          </>
+        )}
       </nav>
 
       {/* Spacer to push settings to bottom */}
       <div className="flex-1" />
 
-      {/* Settings & Admin */}
-      <div className="p-3 border-t border-sidebar-border space-y-1">
-        {canAccessAdminPanel && (
+      {/* Settings & Admin - only show at bottom for non-Super Admin */}
+      {!isSuperAdmin && (
+        <div className="p-3 border-t border-sidebar-border space-y-1">
+          {canAccessAdminPanel && (
+            <Link
+              to="/admin"
+              className={cn(
+                "nav-link",
+                location.pathname === '/admin' && "nav-link-active"
+              )}
+            >
+              <ShieldCheck className="w-5 h-5 shrink-0 nav-icon transition-transform" />
+              <span>Admin Panel</span>
+            </Link>
+          )}
           <Link
-            to="/admin"
+            to="/settings"
             className={cn(
               "nav-link",
-              location.pathname === '/admin' && "nav-link-active"
+              location.pathname === '/settings' && "nav-link-active"
             )}
           >
-            <ShieldCheck className="w-5 h-5 shrink-0 nav-icon transition-transform" />
-            <span>Admin Panel</span>
+            <Settings className="w-5 h-5 shrink-0 nav-icon transition-transform" />
+            <span>Settings</span>
           </Link>
-        )}
-        <Link
-          to="/settings"
-          className={cn(
-            "nav-link",
-            location.pathname === '/settings' && "nav-link-active"
-          )}
-        >
-          <Settings className="w-5 h-5 shrink-0 nav-icon transition-transform" />
-          <span>Settings</span>
-        </Link>
-      </div>
+        </div>
+      )}
 
       {/* User Profile */}
       <div className="p-4 border-t border-sidebar-border">
