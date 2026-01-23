@@ -126,9 +126,6 @@ export function Sidebar() {
         )}
       </nav>
 
-      {/* Spacer to push settings to bottom */}
-      <div className="flex-1" />
-
       {/* Settings & Admin - only show at bottom for non-Super Admin */}
       {!isSuperAdmin && (
         <div className="p-3 border-t border-sidebar-border space-y-1">
