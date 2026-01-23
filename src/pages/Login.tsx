@@ -110,7 +110,12 @@ export default function Login() {
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-4">
-            <img src={staffinixLogo} alt="Staffinix" className="w-14 h-14 rounded-xl" />
+            <img 
+              src={staffinixLogo} 
+              alt="Staffinix" 
+              className="w-14 h-14 rounded-xl" 
+              fetchPriority="high"
+            />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
           <p className="text-sm text-muted-foreground mt-2">
