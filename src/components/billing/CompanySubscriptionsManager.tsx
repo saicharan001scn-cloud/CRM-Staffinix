@@ -157,15 +157,10 @@ export const CompanySubscriptionsManager = ({
           <Building2 className="h-5 w-5" />
           Company Subscriptions ({subscriptions.length})
         </CardTitle>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-green-50">Active: {stats.active}</Badge>
-          <Badge variant="outline" className="bg-yellow-50">Trial: {stats.trial}</Badge>
-          <Badge variant="outline" className="bg-red-50">Past Due: {stats.pastDue}</Badge>
-          <Button onClick={() => setIsSubscriptionModalOpen(true)} size="sm" className="gap-2 ml-2">
-            <Plus className="h-4 w-4" />
-            Add Company
-          </Button>
-        </div>
+        <Button onClick={() => setIsSubscriptionModalOpen(true)} size="sm" className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add Company
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters */}
