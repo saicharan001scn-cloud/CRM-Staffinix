@@ -36,6 +36,7 @@ export default function Dashboard() {
         title="Platform Dashboard" 
         subtitle="Super Admin • Platform Management Overview"
         showBackButton={false}
+        hideGlobalSearch={true}
       >
         <SuperAdminDashboard />
       </MainLayout>
@@ -48,6 +49,7 @@ export default function Dashboard() {
       subtitle="Overview of your staffing operations"
       action={{ label: 'Add Consultant', onClick: () => setShowAddConsultant(true) }}
       showBackButton={false}
+      hideGlobalSearch={true}
     >
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-4 mb-6">
