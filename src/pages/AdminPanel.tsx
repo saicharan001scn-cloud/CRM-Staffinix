@@ -2,18 +2,21 @@ import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
+import { SuperAdminActionPanels } from '@/components/admin/SuperAdminActionPanels';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { ActivityLogs } from '@/components/admin/ActivityLogs';
+import { useUserRole } from '@/hooks/useUserRole';
 import { LayoutDashboard, Users, Activity } from 'lucide-react';
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const { isSuperAdmin } = useUserRole();
 
   return (
     <MainLayout 
       title="Admin Panel" 
-      subtitle="Manage users and system settings"
-      showBackButton={true}
+      subtitle={isSuperAdmin ? "Platform Management • Super Admin" : "Manage users and system settings"}
+      showBackButton={!isSuperAdmin}
       hideGlobalSearch={true}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -33,7 +36,8 @@ export default function AdminPanel() {
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-4">
-          <AdminDashboard />
+          {/* Super Admin sees action panels, regular admins see stats dashboard */}
+          {isSuperAdmin ? <SuperAdminActionPanels /> : <AdminDashboard />}
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4">
