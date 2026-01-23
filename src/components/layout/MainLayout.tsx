@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 import { Sidebar } from './Sidebar';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,7 @@ interface MainLayoutProps {
   headerContent?: ReactNode;
 }
 
-export function MainLayout({ children, title, subtitle, action, showBackButton = true, hideGlobalSearch = false, headerContent }: MainLayoutProps) {
+function MainLayoutComponent({ children, title, subtitle, action, showBackButton = true, hideGlobalSearch = false, headerContent }: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -47,8 +47,8 @@ export function MainLayout({ children, title, subtitle, action, showBackButton =
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="p-6">
+        {/* Page Content with transition animation */}
+        <main className="p-6 page-transition">
           {/* Back Button & Page Title */}
           <div className="mb-8">
             {showBackButton && (
@@ -71,3 +71,6 @@ export function MainLayout({ children, title, subtitle, action, showBackButton =
     </div>
   );
 }
+
+// Memoize MainLayout to prevent re-renders when parent context updates
+export const MainLayout = memo(MainLayoutComponent);

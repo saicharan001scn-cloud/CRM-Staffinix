@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -21,7 +22,33 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import staffinixLogo from '@/assets/staffinix-logo-small.webp';
 
-export function Sidebar() {
+// Memoized NavItem to prevent unnecessary re-renders
+const NavItem = memo(function NavItem({ 
+  icon: Icon, 
+  label, 
+  path, 
+  isActive 
+}: { 
+  icon: React.ElementType; 
+  label: string; 
+  path: string; 
+  isActive: boolean;
+}) {
+  return (
+    <Link
+      to={path}
+      className={cn(
+        "nav-link",
+        isActive && "nav-link-active"
+      )}
+    >
+      <Icon className={cn("w-5 h-5 shrink-0 nav-icon transition-transform", isActive && "text-primary")} />
+      <span>{label}</span>
+    </Link>
+  );
+});
+
+function SidebarComponent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -72,61 +99,42 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="py-6 px-3 space-y-1">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "nav-link",
-                isActive && "nav-link-active"
-              )}
-            >
-              <item.icon className={cn("w-5 h-5 shrink-0 nav-icon transition-transform", isActive && "text-primary")} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+        {navItems.map((item) => (
+          <NavItem
+            key={item.path}
+            icon={item.icon}
+            label={item.label}
+            path={item.path}
+            isActive={location.pathname === item.path}
+          />
+        ))}
         
         {/* Admin Panel & Settings - inline for all users */}
         {canAccessAdminPanel && (
-          <Link
-            to="/admin"
-            className={cn(
-              "nav-link",
-              location.pathname === '/admin' && "nav-link-active"
-            )}
-          >
-            <ShieldCheck className={cn("w-5 h-5 shrink-0 nav-icon transition-transform", location.pathname === '/admin' && "text-primary")} />
-            <span>Admin Panel</span>
-          </Link>
+          <NavItem
+            icon={ShieldCheck}
+            label="Admin Panel"
+            path="/admin"
+            isActive={location.pathname === '/admin'}
+          />
         )}
         
         {/* Billing - Super Admin only */}
         {isSuperAdmin && (
-          <Link
-            to="/billing"
-            className={cn(
-              "nav-link",
-              location.pathname === '/billing' && "nav-link-active"
-            )}
-          >
-            <CreditCard className={cn("w-5 h-5 shrink-0 nav-icon transition-transform", location.pathname === '/billing' && "text-primary")} />
-            <span>Billing</span>
-          </Link>
+          <NavItem
+            icon={CreditCard}
+            label="Billing"
+            path="/billing"
+            isActive={location.pathname === '/billing'}
+          />
         )}
         
-        <Link
-          to="/settings"
-          className={cn(
-            "nav-link",
-            location.pathname === '/settings' && "nav-link-active"
-          )}
-        >
-          <Settings className={cn("w-5 h-5 shrink-0 nav-icon transition-transform", location.pathname === '/settings' && "text-primary")} />
-          <span>Settings</span>
-        </Link>
+        <NavItem
+          icon={Settings}
+          label="Settings"
+          path="/settings"
+          isActive={location.pathname === '/settings'}
+        />
       </nav>
 
       {/* Spacer */}
@@ -173,3 +181,6 @@ export function Sidebar() {
     </aside>
   );
 }
+
+// Memoize the entire Sidebar to prevent re-renders when parent updates
+export const Sidebar = memo(SidebarComponent);
