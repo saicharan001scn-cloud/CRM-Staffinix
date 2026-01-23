@@ -146,5 +146,11 @@ export const useBillingData = () => {
     return { data, error };
   };
 
-  return { plans, subscriptions, payments, coupons, metrics, isLoading, refreshAll, createPlan, updatePlan, createPayment, updatePayment, updateSubscription, createCoupon };
+  const createSubscription = async (subscription: Partial<CompanySubscription>) => {
+    const { data, error } = await (supabase as any).from('company_subscriptions').insert(subscription).select().single();
+    if (!error) await fetchSubscriptions();
+    return { data, error };
+  };
+
+  return { plans, subscriptions, payments, coupons, metrics, isLoading, refreshAll, createPlan, updatePlan, createPayment, updatePayment, updateSubscription, createSubscription, createCoupon };
 };
