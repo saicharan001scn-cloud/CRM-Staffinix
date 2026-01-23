@@ -234,142 +234,139 @@ export function FullScreenCompanyActions({ admin, open, onClose, onActionComplet
   if (!open || !admin) return null;
 
   return (
-    <>
-      {/* Full screen overlay */}
-      <div 
-        className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm animate-in fade-in-0 duration-200"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="company-actions-title"
-      >
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
-          <div className="container max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={onClose} className="mr-2">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Building2 className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h1 id="company-actions-title" className="text-xl font-bold">
-                      Platform Actions for {admin.company_name || 'Unknown Company'}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      Manage company settings, access, and features
-                    </p>
-                  </div>
+    <div 
+      className="fixed inset-0 z-50 flex flex-col bg-background animate-in fade-in-0 duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="company-actions-title"
+    >
+      {/* Header */}
+      <header className="flex-shrink-0 border-b border-border bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <Button variant="ghost" size="icon" onClick={onClose} className="mr-1 sm:mr-2">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <h1 id="company-actions-title" className="text-base sm:text-xl font-bold truncate">
+                    Platform Actions for {admin.company_name || 'Unknown Company'}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
+                    Manage company settings, access, and features
+                  </p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
-                <X className="h-5 w-5" />
-              </Button>
             </div>
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close" className="flex-shrink-0">
+              <X className="h-5 w-5" />
+            </Button>
           </div>
         </div>
+      </header>
 
-        {/* Content */}
-        <ScrollArea className="h-[calc(100vh-5rem)]">
-          <div className="container max-w-7xl mx-auto px-6 py-6 space-y-8">
-            {/* Company Overview Section */}
-            <section>
-              <CompanyOverview admin={admin} />
-            </section>
+      {/* Scrollable Content */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6 sm:space-y-8">
+          {/* Company Overview Section */}
+          <section>
+            <CompanyOverview admin={admin} />
+          </section>
 
-            <Separator />
+          <Separator />
 
-            {/* Platform Actions Section */}
-            <section>
-              <h2 className="text-lg font-semibold mb-4">Platform Actions</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {actionSections.map((section) => {
-                  const SectionIcon = section.icon;
-                  const isExpanded = expandedSections.includes(section.id);
+          {/* Platform Actions Section */}
+          <section>
+            <h2 className="text-lg font-semibold mb-4">Platform Actions</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {actionSections.map((section) => {
+                const SectionIcon = section.icon;
+                const isExpanded = expandedSections.includes(section.id);
 
-                  return (
-                    <Collapsible
-                      key={section.id}
-                      open={isExpanded}
-                      onOpenChange={() => toggleSection(section.id)}
-                      className="border border-border rounded-lg overflow-hidden"
-                    >
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className={cn(
-                            "w-full justify-between h-auto py-4 px-4 rounded-none",
-                            section.bgColor,
-                            "hover:opacity-90"
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <SectionIcon className={cn("h-5 w-5", section.iconColor)} />
-                            <span className="font-medium">{section.title}</span>
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              {section.actions.length}
-                            </Badge>
-                          </div>
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-
-                      <CollapsibleContent className="bg-card/50">
-                        <div className="grid gap-1 p-2">
-                          {section.actions.map((action) => {
-                            const ActionIcon = action.icon;
-                            return (
-                              <Button
-                                key={action.id}
-                                variant={getButtonVariant(action.variant)}
-                                className={cn(
-                                  "justify-start h-auto py-3 px-4",
-                                  getButtonStyles(action.variant)
-                                )}
-                                onClick={() => handleActionClick(action)}
-                              >
-                                <ActionIcon className="h-4 w-4 mr-3 flex-shrink-0" />
-                                <div className="text-left">
-                                  <div className="font-medium text-sm">{action.label}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {action.description}
-                                  </div>
-                                </div>
-                              </Button>
-                            );
-                          })}
+                return (
+                  <Collapsible
+                    key={section.id}
+                    open={isExpanded}
+                    onOpenChange={() => toggleSection(section.id)}
+                    className="border border-border rounded-lg overflow-hidden bg-card"
+                  >
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-between h-auto py-3 sm:py-4 px-3 sm:px-4 rounded-none",
+                          section.bgColor,
+                          "hover:opacity-90"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <SectionIcon className={cn("h-4 w-4 sm:h-5 sm:w-5", section.iconColor)} />
+                          <span className="font-medium text-sm sm:text-base">{section.title}</span>
+                          <Badge variant="outline" className="ml-1 sm:ml-2 text-xs">
+                            {section.actions.length}
+                          </Badge>
                         </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  );
-                })}
-              </div>
-            </section>
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
 
-            {/* Footer Actions */}
-            <div className="flex items-center justify-between pt-6 border-t border-border">
-              <Button variant="outline" onClick={onClose}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to List
-              </Button>
-              <Button variant="ghost" className="text-muted-foreground">
-                <FileText className="h-4 w-4 mr-2" />
-                View Full Audit Log
-              </Button>
+                    <CollapsibleContent className="bg-card/50">
+                      <div className="grid gap-1 p-2">
+                        {section.actions.map((action) => {
+                          const ActionIcon = action.icon;
+                          return (
+                            <Button
+                              key={action.id}
+                              variant={getButtonVariant(action.variant)}
+                              className={cn(
+                                "justify-start h-auto py-2.5 sm:py-3 px-3 sm:px-4",
+                                getButtonStyles(action.variant)
+                              )}
+                              onClick={() => handleActionClick(action)}
+                            >
+                              <ActionIcon className="h-4 w-4 mr-2 sm:mr-3 flex-shrink-0" />
+                              <div className="text-left min-w-0">
+                                <div className="font-medium text-xs sm:text-sm">{action.label}</div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {action.description}
+                                </div>
+                              </div>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })}
             </div>
+          </section>
+
+          {/* Footer Actions */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-border">
+            <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to List
+            </Button>
+            <Button variant="ghost" className="text-muted-foreground w-full sm:w-auto">
+              <FileText className="h-4 w-4 mr-2" />
+              View Full Audit Log
+            </Button>
           </div>
-        </ScrollArea>
-      </div>
+        </div>
+      </main>
 
       {/* Confirmation Dialog */}
-      <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
-        <AlertDialogContent>
+      <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <AlertDialogContent className="bg-background border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Action</AlertDialogTitle>
             <AlertDialogDescription>
@@ -393,6 +390,6 @@ export function FullScreenCompanyActions({ admin, open, onClose, onActionComplet
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }
