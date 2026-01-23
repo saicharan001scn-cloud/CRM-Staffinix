@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -12,50 +12,97 @@ interface UserRoleState {
   refetch: () => Promise<void>;
 }
 
-export function useUserRole(): UserRoleState {
-  const { user } = useAuth();
-  const [role, setRole] = useState<AppRole>(null);
-  const [loading, setLoading] = useState(true);
+interface UserRoleProviderProps {
+  children: ReactNode;
+}
 
-  const fetchRole = async () => {
+const UserRoleContext = createContext<UserRoleState | undefined>(undefined);
+
+export function UserRoleProvider({ children }: UserRoleProviderProps) {
+  const { user, loading: authLoading } = useAuth();
+  const [role, setRole] = useState<AppRole>(null);
+  const [roleLoading, setRoleLoading] = useState(true);
+  const fetchedUserIdRef = useRef<string | null>(null);
+  const isFetchingRef = useRef(false);
+
+  const fetchRole = useCallback(async () => {
     if (!user) {
       setRole(null);
-      setLoading(false);
+      setRoleLoading(false);
+      fetchedUserIdRef.current = null;
+      return;
+    }
+
+    // Skip if already fetched for this user and not a manual refetch
+    if (fetchedUserIdRef.current === user.id && role !== null) {
+      setRoleLoading(false);
+      return;
+    }
+
+    // Prevent concurrent fetches
+    if (isFetchingRef.current) {
       return;
     }
 
     try {
-      setLoading(true);
+      isFetchingRef.current = true;
+      // Don't set loading to true if we already have a cached role - prevents flicker
+      if (fetchedUserIdRef.current !== user.id) {
+        setRoleLoading(true);
+      }
       
-      // Use the database function to get user's highest role
       const { data, error } = await supabase
         .rpc('get_user_role', { _user_id: user.id });
 
       if (error) {
         console.error('Error fetching user role:', error);
-        setRole('user'); // Default to user role on error
+        setRole('user');
       } else {
         setRole(data as AppRole || 'user');
       }
+      fetchedUserIdRef.current = user.id;
     } catch (error) {
       console.error('Error in useUserRole:', error);
       setRole('user');
     } finally {
-      setLoading(false);
+      isFetchingRef.current = false;
+      setRoleLoading(false);
     }
-  };
+  }, [user, role]);
 
   useEffect(() => {
+    // Wait for auth to complete before fetching role
+    if (authLoading) {
+      return;
+    }
+    
     fetchRole();
-  }, [user?.id]);
+  }, [user?.id, authLoading, fetchRole]);
 
-  return {
+  const value: UserRoleState = {
     role,
-    loading,
+    loading: authLoading || roleLoading,
     isAdmin: role === 'admin' || role === 'super_admin',
     isSuperAdmin: role === 'super_admin',
-    refetch: fetchRole,
+    refetch: async () => {
+      fetchedUserIdRef.current = null; // Force refetch
+      await fetchRole();
+    },
   };
+
+  return (
+    <UserRoleContext.Provider value={value}>
+      {children}
+    </UserRoleContext.Provider>
+  );
+}
+
+export function useUserRole(): UserRoleState {
+  const context = useContext(UserRoleContext);
+  if (context === undefined) {
+    throw new Error('useUserRole must be used within a UserRoleProvider');
+  }
+  return context;
 }
 
 // Enhanced activity logger with visibility support

@@ -1,8 +1,7 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Loader2 } from 'lucide-react';
 
 interface OperationalRouteProps {
   children: ReactNode;
@@ -26,17 +25,10 @@ export function OperationalRoute({ children }: OperationalRouteProps) {
   const { user, loading: authLoading } = useAuth();
   const { isSuperAdmin, loading: permissionsLoading } = usePermissions();
   
-  const isLoading = authLoading || permissionsLoading;
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+  // Combined loading check - return null to let parent Suspense handle it
+  // This prevents flickering between different loading states
+  if (authLoading || permissionsLoading) {
+    return null;
   }
 
   // Redirect to login if not authenticated
