@@ -291,7 +291,13 @@ export function UserManagement() {
           )}
 
           {(canCreateUser || canCreateAdmin) && (
-            <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
+            <Button 
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setIsCreateModalOpen(true);
+              }} 
+              className="gap-2"
+            >
               <Plus className="w-4 h-4" />
               Add User
             </Button>
