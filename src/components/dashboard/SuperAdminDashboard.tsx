@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
 interface PlatformStats {
   totalCompanies: number;
@@ -43,9 +44,64 @@ interface RecentActivity {
   user_email?: string;
 }
 
+// Fetch all platform data in parallel
+const fetchPlatformData = async () => {
+  const todayStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const thisMonthStart = new Date();
+  thisMonthStart.setDate(1);
+  thisMonthStart.setHours(0, 0, 0, 0);
+
+  // Execute all queries in parallel
+  const [profilesRes, rolesRes, activityRes, loginsRes] = await Promise.all([
+    supabase.from('profiles').select('id, created_at, account_status'),
+    supabase.from('user_roles').select('role'),
+    supabase.from('activity_logs')
+      .select('id, action, entity_type, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5),
+    supabase.from('login_history')
+      .select('id')
+      .gte('login_at', todayStart),
+  ]);
+
+  const profiles = profilesRes.data || [];
+  const roles = rolesRes.data || [];
+  const activity = activityRes.data || [];
+  const logins = loginsRes.data || [];
+
+  const adminCount = roles.filter(r => r.role === 'admin').length;
+  const superAdminCount = roles.filter(r => r.role === 'super_admin').length;
+  const userCount = roles.filter(r => r.role === 'user').length;
+  
+  const newThisMonth = profiles.filter(p => 
+    new Date(p.created_at) >= thisMonthStart
+  ).length;
+
+  const stats: PlatformStats = {
+    totalCompanies: adminCount,
+    activeCompanies: adminCount,
+    totalUsers: profiles.length,
+    adminCount: adminCount + superAdminCount,
+    regularUserCount: userCount,
+    newUsersThisMonth: newThisMonth,
+    activeSessionsToday: logins.length,
+  };
+
+  return { stats, recentActivity: activity as RecentActivity[] };
+};
+
 export function SuperAdminDashboard() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<PlatformStats>({
+
+  // Use React Query for caching and efficient refetching
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['super-admin-dashboard'],
+    queryFn: fetchPlatformData,
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+    gcTime: 10 * 60 * 1000,   // Keep in memory for 10 minutes
+  });
+
+  const stats = data?.stats ?? {
     totalCompanies: 0,
     activeCompanies: 0,
     totalUsers: 0,
@@ -53,75 +109,9 @@ export function SuperAdminDashboard() {
     regularUserCount: 0,
     newUsersThisMonth: 0,
     activeSessionsToday: 0,
-  });
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchPlatformData();
-  }, []);
-
-  const fetchPlatformData = async () => {
-    setLoading(true);
-    try {
-      // Fetch user counts
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, created_at, account_status');
-
-      // Fetch role counts
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('role');
-
-      // Fetch recent activity
-      const { data: activity, error: activityError } = await supabase
-        .from('activity_logs')
-        .select('id, action, entity_type, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      // Fetch login history for active sessions
-      const { data: logins, error: loginsError } = await supabase
-        .from('login_history')
-        .select('id')
-        .gte('login_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-      if (profiles && roles) {
-        const adminCount = roles.filter(r => r.role === 'admin').length;
-        const superAdminCount = roles.filter(r => r.role === 'super_admin').length;
-        const userCount = roles.filter(r => r.role === 'user').length;
-        
-        const thisMonthStart = new Date();
-        thisMonthStart.setDate(1);
-        thisMonthStart.setHours(0, 0, 0, 0);
-        
-        const newThisMonth = profiles.filter(p => 
-          new Date(p.created_at) >= thisMonthStart
-        ).length;
-
-        const activeProfiles = profiles.filter(p => p.account_status === 'active').length;
-
-        setStats({
-          totalCompanies: adminCount, // Each admin represents a "company" in this model
-          activeCompanies: adminCount,
-          totalUsers: profiles.length,
-          adminCount: adminCount + superAdminCount,
-          regularUserCount: userCount,
-          newUsersThisMonth: newThisMonth,
-          activeSessionsToday: logins?.length || 0,
-        });
-      }
-
-      if (activity) {
-        setRecentActivity(activity);
-      }
-    } catch (error) {
-      console.error('Error fetching platform data:', error);
-    } finally {
-      setLoading(false);
-    }
   };
+
+  const recentActivity = data?.recentActivity ?? [];
 
   const platformMetrics = [
     {
@@ -172,7 +162,7 @@ export function SuperAdminDashboard() {
     { label: 'Manage Roles', icon: Shield, action: () => navigate('/admin?tab=roles') },
   ];
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-4 gap-4">
@@ -206,7 +196,7 @@ export function SuperAdminDashboard() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={fetchPlatformData}
+            onClick={() => refetch()}
             className="gap-2"
           >
             <RefreshCw className="w-4 h-4" />
