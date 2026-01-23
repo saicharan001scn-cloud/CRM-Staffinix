@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Loader2, ShieldX } from 'lucide-react';
+import { ShieldX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface AdminRouteProps {
@@ -14,15 +14,10 @@ export function AdminRoute({ children, requireSuperAdmin = false }: AdminRoutePr
   const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading, isAdmin, isSuperAdmin } = useUserRole();
 
+  // Combined loading check - return null to let parent Suspense handle it
+  // This prevents flickering between different loading states
   if (authLoading || roleLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Verifying access...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (!user) {

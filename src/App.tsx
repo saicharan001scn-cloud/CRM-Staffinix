@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SubmissionsProvider } from "./context/SubmissionsContext";
 import { AuthProvider } from "./hooks/useAuth";
+import { UserRoleProvider } from "./hooks/useUserRole";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { OperationalRoute } from "./components/auth/OperationalRoute";
 import { AdminRoute } from "./components/auth/AdminRoute";
@@ -36,10 +37,13 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
-// Loading fallback component
+// Unified loading fallback component - single source of loading UI
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
-    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    <div className="flex flex-col items-center gap-3">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">Loading...</p>
+    </div>
   </div>
 );
 
@@ -47,35 +51,37 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <SubmissionsProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/consultants" element={<OperationalRoute><Consultants /></OperationalRoute>} />
-                <Route path="/consultants/:consultantId" element={<OperationalRoute><ConsultantProfile /></OperationalRoute>} />
-                <Route path="/jobs" element={<OperationalRoute><Jobs /></OperationalRoute>} />
-                <Route path="/jobs/:jobId/matches" element={<OperationalRoute><JobMatches /></OperationalRoute>} />
-                <Route path="/vendors" element={<OperationalRoute><Vendors /></OperationalRoute>} />
-                <Route path="/submissions" element={<OperationalRoute><Submissions /></OperationalRoute>} />
-                <Route path="/emails" element={<OperationalRoute><Emails /></OperationalRoute>} />
-                <Route path="/analytics" element={<OperationalRoute><Analytics /></OperationalRoute>} />
-                <Route path="/assistant" element={<OperationalRoute><Assistant /></OperationalRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/settings/integrations" element={<ProtectedRoute><IntegrationsManagement /></ProtectedRoute>} />
-                <Route path="/settings/api-keys" element={<ProtectedRoute><ApiKeysManagement /></ProtectedRoute>} />
-                <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
-                <Route path="/billing" element={<AdminRoute><BillingManagement /></AdminRoute>} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </SubmissionsProvider>
+        <UserRoleProvider>
+          <SubmissionsProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                  <Route path="/consultants" element={<OperationalRoute><Consultants /></OperationalRoute>} />
+                  <Route path="/consultants/:consultantId" element={<OperationalRoute><ConsultantProfile /></OperationalRoute>} />
+                  <Route path="/jobs" element={<OperationalRoute><Jobs /></OperationalRoute>} />
+                  <Route path="/jobs/:jobId/matches" element={<OperationalRoute><JobMatches /></OperationalRoute>} />
+                  <Route path="/vendors" element={<OperationalRoute><Vendors /></OperationalRoute>} />
+                  <Route path="/submissions" element={<OperationalRoute><Submissions /></OperationalRoute>} />
+                  <Route path="/emails" element={<OperationalRoute><Emails /></OperationalRoute>} />
+                  <Route path="/analytics" element={<OperationalRoute><Analytics /></OperationalRoute>} />
+                  <Route path="/assistant" element={<OperationalRoute><Assistant /></OperationalRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                  <Route path="/settings/integrations" element={<ProtectedRoute><IntegrationsManagement /></ProtectedRoute>} />
+                  <Route path="/settings/api-keys" element={<ProtectedRoute><ApiKeysManagement /></ProtectedRoute>} />
+                  <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+                  <Route path="/billing" element={<AdminRoute><BillingManagement /></AdminRoute>} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </SubmissionsProvider>
+        </UserRoleProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
