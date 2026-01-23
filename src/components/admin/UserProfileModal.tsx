@@ -20,7 +20,11 @@ import {
   Clock,
   Shield,
   BarChart2,
-  Crown
+  Crown,
+  Users,
+  Briefcase,
+  Send,
+  TrendingUp
 } from 'lucide-react';
 import type { UserWithRole } from '@/types/admin';
 
@@ -30,9 +34,18 @@ interface UserProfileModalProps {
   userId: string | null;
 }
 
+interface AdminStats {
+  totalEmployees: number;
+  activeEmployees: number;
+  totalSubmissions: number;
+  totalPlacements: number;
+  recentActivity: number;
+}
+
 export function UserProfileModal({ open, onOpenChange, userId }: UserProfileModalProps) {
   const [user, setUser] = useState<UserWithRole | null>(null);
   const [loading, setLoading] = useState(false);
+  const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
 
   useEffect(() => {
     if (open && userId) {
@@ -63,15 +76,77 @@ export function UserProfileModal({ open, onOpenChange, userId }: UserProfileModa
         return (order[a.role] || 4) - (order[b.role] || 4);
       })[0];
 
-      setUser({
+      const userWithRole = {
         ...profile,
         role: highestRole?.role || 'user',
         roles: roles || [],
-      } as UserWithRole);
+      } as UserWithRole;
+
+      setUser(userWithRole);
+
+      // Fetch admin-specific stats if user is an admin
+      if (highestRole?.role === 'admin') {
+        await fetchAdminStats(userId, profile.company_name);
+      } else {
+        setAdminStats(null);
+      }
     } catch (error) {
       console.error('Error fetching user:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAdminStats = async (adminId: string, companyName: string | null) => {
+    try {
+      // Fetch employees created by this admin
+      const { data: employees, error: empError } = await supabase
+        .from('profiles')
+        .select('user_id, account_status')
+        .eq('created_by', adminId);
+
+      if (empError) throw empError;
+
+      const totalEmployees = employees?.length || 0;
+      const activeEmployees = employees?.filter(e => e.account_status === 'active').length || 0;
+
+      // Fetch submissions count for this company/admin's team
+      const employeeIds = employees?.map(e => e.user_id) || [];
+      const allUserIds = [adminId, ...employeeIds];
+
+      let totalSubmissions = 0;
+      let totalPlacements = 0;
+
+      if (allUserIds.length > 0) {
+        const { data: submissions } = await supabase
+          .from('submissions')
+          .select('id, status')
+          .in('user_id', allUserIds);
+
+        totalSubmissions = submissions?.length || 0;
+        totalPlacements = submissions?.filter(s => s.status === 'placed').length || 0;
+      }
+
+      // Fetch recent activity (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { data: recentLogs } = await supabase
+        .from('activity_logs')
+        .select('id')
+        .in('user_id', allUserIds)
+        .gte('created_at', sevenDaysAgo.toISOString());
+
+      setAdminStats({
+        totalEmployees,
+        activeEmployees,
+        totalSubmissions,
+        totalPlacements,
+        recentActivity: recentLogs?.length || 0
+      });
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      setAdminStats(null);
     }
   };
 
@@ -97,7 +172,7 @@ export function UserProfileModal({ open, onOpenChange, userId }: UserProfileModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>User Profile</DialogTitle>
         </DialogHeader>
@@ -106,6 +181,7 @@ export function UserProfileModal({ open, onOpenChange, userId }: UserProfileModa
           <div className="space-y-4">
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-24 w-full" />
           </div>
         ) : user ? (
           <div className="space-y-4">
@@ -115,11 +191,13 @@ export function UserProfileModal({ open, onOpenChange, userId }: UserProfileModa
                 user.role === 'super_admin' 
                   ? 'bg-gradient-to-br from-amber-500/30 to-yellow-500/30 ring-2 ring-amber-500/20' 
                   : user.role === 'admin'
-                  ? 'bg-blue-500/20'
+                  ? 'bg-blue-500/20 ring-2 ring-blue-500/20'
                   : 'bg-primary/20'
               }`}>
                 {user.role === 'super_admin' ? (
                   <Crown className="w-8 h-8 text-amber-400" />
+                ) : user.role === 'admin' ? (
+                  <Shield className="w-8 h-8 text-blue-400" />
                 ) : (
                   <User className="w-8 h-8 text-primary" />
                 )}
@@ -132,6 +210,7 @@ export function UserProfileModal({ open, onOpenChange, userId }: UserProfileModa
                 <div className="flex gap-2 mt-2">
                   <Badge variant="outline" className={getRoleBadgeColor(user.role)}>
                     {user.role === 'super_admin' && <Crown className="w-3 h-3 mr-1" />}
+                    {user.role === 'admin' && <Shield className="w-3 h-3 mr-1" />}
                     {user.role?.replace('_', ' ').toUpperCase() || 'USER'}
                   </Badge>
                   <Badge variant="outline" className={getStatusColor(user.account_status)}>
@@ -142,6 +221,79 @@ export function UserProfileModal({ open, onOpenChange, userId }: UserProfileModa
             </div>
 
             <Separator />
+
+            {/* Admin Team Stats - Only show for admins */}
+            {user.role === 'admin' && adminStats && (
+              <>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-blue-400" />
+                    Team & Company Overview
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Card className="p-3 bg-blue-500/5 border-blue-500/20">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-blue-500/20">
+                          <Users className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-foreground">{adminStats.totalEmployees}</p>
+                          <p className="text-xs text-muted-foreground">Team Members</p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card className="p-3 bg-success/5 border-success/20">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-success/20">
+                          <TrendingUp className="w-4 h-4 text-success" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-foreground">{adminStats.activeEmployees}</p>
+                          <p className="text-xs text-muted-foreground">Active Members</p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card className="p-3 bg-primary/5 border-primary/20">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-primary/20">
+                          <Send className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-foreground">{adminStats.totalSubmissions}</p>
+                          <p className="text-xs text-muted-foreground">Total Submissions</p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card className="p-3 bg-amber-500/5 border-amber-500/20">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-amber-500/20">
+                          <Briefcase className="w-4 h-4 text-amber-400" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-foreground">{adminStats.totalPlacements}</p>
+                          <p className="text-xs text-muted-foreground">Placements</p>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+
+                  <Card className="p-3 mt-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <BarChart2 className="w-4 h-4" />
+                        <span className="text-sm">Recent Activity (7 days)</span>
+                      </div>
+                      <span className="font-semibold text-foreground">{adminStats.recentActivity} actions</span>
+                    </div>
+                  </Card>
+                </div>
+
+                <Separator />
+              </>
+            )}
 
             {/* Details */}
             <div className="grid grid-cols-2 gap-4">
