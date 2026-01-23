@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,27 +9,39 @@ import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { OperationalRoute } from "./components/auth/OperationalRoute";
 import { AdminRoute } from "./components/auth/AdminRoute";
+import { Loader2 } from "lucide-react";
+
+// Eagerly load auth pages for fast initial render
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
-import Dashboard from "./pages/Dashboard";
-import Consultants from "./pages/Consultants";
-import ConsultantProfile from "./pages/ConsultantProfile";
-import Jobs from "./pages/Jobs";
-import JobMatches from "./pages/JobMatches";
-import Vendors from "./pages/Vendors";
-import Submissions from "./pages/Submissions";
-import Emails from "./pages/Emails";
-import Analytics from "./pages/Analytics";
-import Assistant from "./pages/Assistant";
-import Settings from "./pages/Settings";
-import IntegrationsManagement from "./pages/IntegrationsManagement";
-import ApiKeysManagement from "./pages/ApiKeysManagement";
-import AdminPanel from "./pages/AdminPanel";
-import BillingManagement from "./pages/BillingManagement";
-import NotFound from "./pages/NotFound";
+
+// Lazy load all other pages to reduce initial bundle size
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Consultants = lazy(() => import("./pages/Consultants"));
+const ConsultantProfile = lazy(() => import("./pages/ConsultantProfile"));
+const Jobs = lazy(() => import("./pages/Jobs"));
+const JobMatches = lazy(() => import("./pages/JobMatches"));
+const Vendors = lazy(() => import("./pages/Vendors"));
+const Submissions = lazy(() => import("./pages/Submissions"));
+const Emails = lazy(() => import("./pages/Emails"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Assistant = lazy(() => import("./pages/Assistant"));
+const Settings = lazy(() => import("./pages/Settings"));
+const IntegrationsManagement = lazy(() => import("./pages/IntegrationsManagement"));
+const ApiKeysManagement = lazy(() => import("./pages/ApiKeysManagement"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const BillingManagement = lazy(() => import("./pages/BillingManagement"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -38,27 +51,29 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/consultants" element={<OperationalRoute><Consultants /></OperationalRoute>} />
-              <Route path="/consultants/:consultantId" element={<OperationalRoute><ConsultantProfile /></OperationalRoute>} />
-              <Route path="/jobs" element={<OperationalRoute><Jobs /></OperationalRoute>} />
-              <Route path="/jobs/:jobId/matches" element={<OperationalRoute><JobMatches /></OperationalRoute>} />
-              <Route path="/vendors" element={<OperationalRoute><Vendors /></OperationalRoute>} />
-              <Route path="/submissions" element={<OperationalRoute><Submissions /></OperationalRoute>} />
-              <Route path="/emails" element={<OperationalRoute><Emails /></OperationalRoute>} />
-              <Route path="/analytics" element={<OperationalRoute><Analytics /></OperationalRoute>} />
-              <Route path="/assistant" element={<OperationalRoute><Assistant /></OperationalRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/settings/integrations" element={<ProtectedRoute><IntegrationsManagement /></ProtectedRoute>} />
-              <Route path="/settings/api-keys" element={<ProtectedRoute><ApiKeysManagement /></ProtectedRoute>} />
-              <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
-              <Route path="/billing" element={<AdminRoute><BillingManagement /></AdminRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/consultants" element={<OperationalRoute><Consultants /></OperationalRoute>} />
+                <Route path="/consultants/:consultantId" element={<OperationalRoute><ConsultantProfile /></OperationalRoute>} />
+                <Route path="/jobs" element={<OperationalRoute><Jobs /></OperationalRoute>} />
+                <Route path="/jobs/:jobId/matches" element={<OperationalRoute><JobMatches /></OperationalRoute>} />
+                <Route path="/vendors" element={<OperationalRoute><Vendors /></OperationalRoute>} />
+                <Route path="/submissions" element={<OperationalRoute><Submissions /></OperationalRoute>} />
+                <Route path="/emails" element={<OperationalRoute><Emails /></OperationalRoute>} />
+                <Route path="/analytics" element={<OperationalRoute><Analytics /></OperationalRoute>} />
+                <Route path="/assistant" element={<OperationalRoute><Assistant /></OperationalRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/settings/integrations" element={<ProtectedRoute><IntegrationsManagement /></ProtectedRoute>} />
+                <Route path="/settings/api-keys" element={<ProtectedRoute><ApiKeysManagement /></ProtectedRoute>} />
+                <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+                <Route path="/billing" element={<AdminRoute><BillingManagement /></AdminRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </BrowserRouter>
         </SubmissionsProvider>
       </AuthProvider>
