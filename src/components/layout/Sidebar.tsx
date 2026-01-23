@@ -73,7 +73,7 @@ export const Sidebar = memo(function Sidebar() {
   // Build nav items based on permissions
   // Super Admin sees platform management, not operational pages
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/', visible: true },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/', visible: !isSuperAdmin },
     { icon: Users, label: 'Consultants', path: '/consultants', visible: !isSuperAdmin },
     { icon: Briefcase, label: 'Job Requirements', path: '/jobs', visible: !isSuperAdmin },
     { icon: Building2, label: 'Vendors', path: '/vendors', visible: !isSuperAdmin },
