@@ -19,6 +19,7 @@ export default function AdminPanel() {
       title="Admin Panel" 
       subtitle="Manage users, roles, and system settings"
       showBackButton={true}
+      hideGlobalSearch={true}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-flex">
