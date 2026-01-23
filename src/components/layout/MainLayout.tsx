@@ -16,9 +16,11 @@ interface MainLayoutProps {
     onClick: () => void;
   };
   showBackButton?: boolean;
+  hideGlobalSearch?: boolean;
+  headerContent?: ReactNode;
 }
 
-export function MainLayout({ children, title, subtitle, action, showBackButton = true }: MainLayoutProps) {
+export function MainLayout({ children, title, subtitle, action, showBackButton = true, hideGlobalSearch = false, headerContent }: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -28,8 +30,8 @@ export function MainLayout({ children, title, subtitle, action, showBackButton =
         {/* Top Header */}
         <header className="h-16 border-b border-border bg-card/50 backdrop-blur-xl sticky top-0 z-40">
           <div className="h-full px-6 flex items-center justify-between">
-            {/* Global Search */}
-            <GlobalSearch />
+            {/* Global Search or Custom Header Content */}
+            {hideGlobalSearch ? (headerContent || <div />) : <GlobalSearch />}
 
             {/* Actions */}
             <div className="flex items-center gap-4">

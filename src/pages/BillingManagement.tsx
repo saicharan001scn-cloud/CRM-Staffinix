@@ -6,13 +6,17 @@ import { PaymentsDashboard } from '@/components/billing/PaymentsDashboard';
 import { CompanySubscriptionsManager } from '@/components/billing/CompanySubscriptionsManager';
 import { SalesAnalytics } from '@/components/billing/SalesAnalytics';
 import { CouponsManager } from '@/components/billing/CouponsManager';
+import { CreateSubscriptionModal } from '@/components/billing/CreateSubscriptionModal';
+import { BillingSearchBar } from '@/components/billing/BillingSearchBar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, DollarSign, TrendingUp, Users, CreditCard } from 'lucide-react';
-import { useMemo } from 'react';
+import { RefreshCw, DollarSign, TrendingUp, Users, CreditCard, Plus } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 const BillingManagement = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const {
     plans,
     subscriptions,
@@ -26,8 +30,48 @@ const BillingManagement = () => {
     createPayment,
     updatePayment,
     updateSubscription,
+    createSubscription,
     createCoupon
   } = useBillingData();
+
+  // Filtered data based on search query
+  const filteredSubscriptions = useMemo(() => {
+    if (!searchQuery) return subscriptions;
+    const query = searchQuery.toLowerCase();
+    return subscriptions.filter(sub => 
+      sub.company_name.toLowerCase().includes(query) ||
+      sub.company_email.toLowerCase().includes(query) ||
+      sub.status.toLowerCase().includes(query)
+    );
+  }, [subscriptions, searchQuery]);
+
+  const filteredPayments = useMemo(() => {
+    if (!searchQuery) return payments;
+    const query = searchQuery.toLowerCase();
+    return payments.filter(payment => 
+      payment.company_name.toLowerCase().includes(query) ||
+      payment.invoice_number?.toLowerCase().includes(query) ||
+      payment.status.toLowerCase().includes(query)
+    );
+  }, [payments, searchQuery]);
+
+  const filteredPlans = useMemo(() => {
+    if (!searchQuery) return plans;
+    const query = searchQuery.toLowerCase();
+    return plans.filter(plan => 
+      plan.name.toLowerCase().includes(query) ||
+      plan.slug.toLowerCase().includes(query)
+    );
+  }, [plans, searchQuery]);
+
+  const filteredCoupons = useMemo(() => {
+    if (!searchQuery) return coupons;
+    const query = searchQuery.toLowerCase();
+    return coupons.filter(coupon => 
+      coupon.code.toLowerCase().includes(query) ||
+      coupon.description?.toLowerCase().includes(query)
+    );
+  }, [coupons, searchQuery]);
 
   // Calculate subscription counts per plan
   const subscriptionCounts = useMemo(() => {
@@ -40,11 +84,20 @@ const BillingManagement = () => {
     return counts;
   }, [subscriptions]);
 
+  const headerContent = (
+    <BillingSearchBar 
+      onSearch={setSearchQuery} 
+      placeholder="Search plans, payments, companies, coupons..." 
+    />
+  );
+
   if (isLoading) {
     return (
       <MainLayout 
         title="💳 Billing Management" 
         subtitle="Loading billing data..."
+        hideGlobalSearch
+        headerContent={headerContent}
       >
         <div className="space-y-6">
           <div className="grid grid-cols-4 gap-4">
@@ -67,6 +120,8 @@ const BillingManagement = () => {
     <MainLayout 
       title="💳 Payment & Subscription Management" 
       subtitle="Manage plans, payments, and company subscriptions"
+      hideGlobalSearch
+      headerContent={headerContent}
     >
       <div className="space-y-6">
         {/* Quick Stats */}
@@ -126,8 +181,12 @@ const BillingManagement = () => {
           </Card>
         </div>
 
-        {/* Refresh Button */}
-        <div className="flex justify-end">
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3">
+          <Button onClick={() => setIsSubscriptionModalOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Company Subscription
+          </Button>
           <Button variant="outline" onClick={refreshAll} className="gap-2">
             <RefreshCw className="h-4 w-4" />
             Refresh Data
@@ -146,7 +205,7 @@ const BillingManagement = () => {
 
           <TabsContent value="plans">
             <SubscriptionPlansManager
-              plans={plans}
+              plans={filteredPlans}
               subscriptionCounts={subscriptionCounts}
               onCreatePlan={createPlan}
               onUpdatePlan={updatePlan}
@@ -155,7 +214,7 @@ const BillingManagement = () => {
 
           <TabsContent value="payments">
             <PaymentsDashboard
-              payments={payments}
+              payments={filteredPayments}
               onUpdatePayment={updatePayment}
               onCreatePayment={createPayment}
             />
@@ -163,7 +222,7 @@ const BillingManagement = () => {
 
           <TabsContent value="subscriptions">
             <CompanySubscriptionsManager
-              subscriptions={subscriptions}
+              subscriptions={filteredSubscriptions}
               plans={plans}
               onUpdateSubscription={updateSubscription}
             />
@@ -171,7 +230,7 @@ const BillingManagement = () => {
 
           <TabsContent value="coupons">
             <CouponsManager
-              coupons={coupons}
+              coupons={filteredCoupons}
               onCreateCoupon={createCoupon}
             />
           </TabsContent>
@@ -184,6 +243,14 @@ const BillingManagement = () => {
             />
           </TabsContent>
         </Tabs>
+
+        {/* Create Subscription Modal */}
+        <CreateSubscriptionModal
+          isOpen={isSubscriptionModalOpen}
+          onClose={() => setIsSubscriptionModalOpen(false)}
+          onSubmit={createSubscription}
+          plans={plans}
+        />
       </div>
     </MainLayout>
   );
