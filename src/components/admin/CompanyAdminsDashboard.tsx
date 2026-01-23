@@ -21,7 +21,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCompanyAdmins } from '@/hooks/useCompanyAdmins';
-import { CompanyActionsModal } from './CompanyActionsModal';
+import { FullScreenCompanyActions } from './FullScreenCompanyActions';
+import { CreateCompanyAdminModal } from './CreateCompanyAdminModal';
 import type { CompanyAdmin, CompanyAdminFilters } from '@/types/companyAdmin';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -47,11 +48,17 @@ export function CompanyAdminsDashboard() {
   } = useCompanyAdmins();
 
   const [selectedAdmin, setSelectedAdmin] = useState<CompanyAdmin | null>(null);
-  const [actionsModalOpen, setActionsModalOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const handleAdminClick = (admin: CompanyAdmin) => {
     setSelectedAdmin(admin);
-    setActionsModalOpen(true);
+    setActionsOpen(true);
+  };
+
+  const handleCloseActions = () => {
+    setActionsOpen(false);
+    setSelectedAdmin(null);
   };
 
   const handleSearchChange = (value: string) => {
@@ -63,6 +70,11 @@ export function CompanyAdminsDashboard() {
       ...prev, 
       status: value as CompanyAdminFilters['status'] 
     }));
+  };
+
+  const handleCreateSuccess = () => {
+    setCreateModalOpen(false);
+    refetch();
   };
 
   const getStatusBadge = (status?: string) => {
@@ -143,7 +155,7 @@ export function CompanyAdminsDashboard() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setCreateModalOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
             Create New Company Admin
           </Button>
@@ -319,12 +331,19 @@ export function CompanyAdminsDashboard() {
         </CardContent>
       </Card>
 
-      {/* Actions Modal */}
-      <CompanyActionsModal
+      {/* Full Screen Actions Panel */}
+      <FullScreenCompanyActions
         admin={selectedAdmin}
-        open={actionsModalOpen}
-        onOpenChange={setActionsModalOpen}
+        open={actionsOpen}
+        onClose={handleCloseActions}
         onActionComplete={refetch}
+      />
+
+      {/* Create Company Admin Modal */}
+      <CreateCompanyAdminModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onSuccess={handleCreateSuccess}
       />
     </div>
   );
