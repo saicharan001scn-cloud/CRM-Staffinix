@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Mail, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import staffinixLogo from '@/assets/staffinix-logo.png';
+import staffinixLogo from '@/assets/staffinix-logo-small.webp';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -77,7 +77,7 @@ export default function ForgotPassword() {
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-4">
-            <img src={staffinixLogo} alt="Staffinix" className="w-14 h-14 rounded-xl" />
+            <img src={staffinixLogo} alt="Staffinix" className="w-14 h-14 rounded-xl" fetchPriority="high" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Forgot Password?</h1>
           <p className="text-sm text-muted-foreground mt-2">
