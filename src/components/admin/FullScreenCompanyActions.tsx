@@ -237,7 +237,7 @@ export function FullScreenCompanyActions({ admin, open, onClose, onActionComplet
     <>
       {/* Full screen overlay - z-[100] to ensure it covers the sidebar (z-50) and all other elements */}
       <div 
-        className="fixed inset-4 z-[100] bg-background animate-in fade-in-0 duration-200 flex flex-col overflow-hidden rounded-xl border shadow-2xl"
+        className="fixed inset-0 z-[100] bg-background animate-in fade-in-0 duration-200 flex flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-labelledby="company-actions-title"
