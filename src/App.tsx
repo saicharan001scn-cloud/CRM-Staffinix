@@ -35,15 +35,25 @@ const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const BillingManagement = lazy(() => import("./pages/BillingManagement"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Keep data fresh for 5 minutes - prevents re-fetching on navigation
+      staleTime: 5 * 60 * 1000,
+      // Cache data for 30 minutes
+      gcTime: 30 * 60 * 1000,
+      // Don't refetch on window focus for better UX during navigation
+      refetchOnWindowFocus: false,
+      // Retry failed requests once
+      retry: 1,
+    },
+  },
+});
 
-// Unified loading fallback component - single source of loading UI
+// Unified loading fallback component - minimal loading state for fast perceived performance
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="flex flex-col items-center gap-3">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      <p className="text-sm text-muted-foreground">Loading...</p>
-    </div>
+  <div className="min-h-screen flex items-center justify-center bg-background animate-in fade-in duration-150">
+    <Loader2 className="w-6 h-6 animate-spin text-primary" />
   </div>
 );
 
