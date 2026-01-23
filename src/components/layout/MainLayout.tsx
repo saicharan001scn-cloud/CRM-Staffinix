@@ -20,7 +20,15 @@ interface MainLayoutProps {
   headerContent?: ReactNode;
 }
 
-function MainLayoutComponent({ children, title, subtitle, action, showBackButton = true, hideGlobalSearch = false, headerContent }: MainLayoutProps) {
+export const MainLayout = memo(function MainLayout({ 
+  children, 
+  title, 
+  subtitle, 
+  action, 
+  showBackButton = true, 
+  hideGlobalSearch = false, 
+  headerContent 
+}: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -70,7 +78,4 @@ function MainLayoutComponent({ children, title, subtitle, action, showBackButton
       <AdminWatermark />
     </div>
   );
-}
-
-// Memoize MainLayout to prevent re-renders when parent context updates
-export const MainLayout = memo(MainLayoutComponent);
+});
