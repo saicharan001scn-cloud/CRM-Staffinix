@@ -19,7 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import staffinixLogo from '@/assets/staffinix-logo.png';
+import staffinixLogo from '@/assets/staffinix-logo-small.webp';
 
 export function Sidebar() {
   const location = useLocation();

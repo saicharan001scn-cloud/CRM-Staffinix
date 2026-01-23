@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Lock, Mail, LogIn, Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import staffinixLogo from '@/assets/staffinix-logo.png';
+import staffinixLogo from '@/assets/staffinix-logo-small.webp';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
