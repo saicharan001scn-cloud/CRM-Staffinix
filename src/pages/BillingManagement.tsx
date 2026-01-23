@@ -6,17 +6,15 @@ import { PaymentsDashboard } from '@/components/billing/PaymentsDashboard';
 import { CompanySubscriptionsManager } from '@/components/billing/CompanySubscriptionsManager';
 import { SalesAnalytics } from '@/components/billing/SalesAnalytics';
 import { CouponsManager } from '@/components/billing/CouponsManager';
-import { CreateSubscriptionModal } from '@/components/billing/CreateSubscriptionModal';
 import { BillingSearchBar } from '@/components/billing/BillingSearchBar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, DollarSign, TrendingUp, Users, CreditCard, Plus } from 'lucide-react';
+import { RefreshCw, DollarSign, TrendingUp, Users, CreditCard } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 const BillingManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const {
     plans,
     subscriptions,
@@ -183,10 +181,6 @@ const BillingManagement = () => {
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
-          <Button onClick={() => setIsSubscriptionModalOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Company Subscription
-          </Button>
           <Button variant="outline" onClick={refreshAll} className="gap-2">
             <RefreshCw className="h-4 w-4" />
             Refresh Data
@@ -225,6 +219,7 @@ const BillingManagement = () => {
               subscriptions={filteredSubscriptions}
               plans={plans}
               onUpdateSubscription={updateSubscription}
+              onCreateSubscription={createSubscription}
             />
           </TabsContent>
 
@@ -243,14 +238,6 @@ const BillingManagement = () => {
             />
           </TabsContent>
         </Tabs>
-
-        {/* Create Subscription Modal */}
-        <CreateSubscriptionModal
-          isOpen={isSubscriptionModalOpen}
-          onClose={() => setIsSubscriptionModalOpen(false)}
-          onSubmit={createSubscription}
-          plans={plans}
-        />
       </div>
     </MainLayout>
   );
