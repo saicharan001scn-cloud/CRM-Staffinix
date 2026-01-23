@@ -48,7 +48,7 @@ const NavItem = memo(function NavItem({
   );
 });
 
-function SidebarComponent() {
+export const Sidebar = memo(function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -180,7 +180,4 @@ function SidebarComponent() {
       </div>
     </aside>
   );
-}
-
-// Memoize the entire Sidebar to prevent re-renders when parent updates
-export const Sidebar = memo(SidebarComponent);
+});
