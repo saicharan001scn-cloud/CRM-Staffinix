@@ -24,8 +24,10 @@ import {
   Users,
   HardDrive,
   Building2,
-  RefreshCw
+  RefreshCw,
+  Plus
 } from 'lucide-react';
+import { CreateSubscriptionModal } from './CreateSubscriptionModal';
 import { CompanySubscription, SubscriptionPlan } from '@/types/billing';
 import { format, differenceInDays, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
@@ -34,15 +36,18 @@ interface CompanySubscriptionsManagerProps {
   subscriptions: CompanySubscription[];
   plans: SubscriptionPlan[];
   onUpdateSubscription: (id: string, updates: Partial<CompanySubscription>) => Promise<{ error: Error | null }>;
+  onCreateSubscription: (subscription: Partial<CompanySubscription>) => Promise<{ error: Error | null }>;
 }
 
 export const CompanySubscriptionsManager = ({
   subscriptions,
   plans,
-  onUpdateSubscription
+  onUpdateSubscription,
+  onCreateSubscription
 }: CompanySubscriptionsManagerProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
   const filteredSubscriptions = subscriptions.filter(sub => {
     const matchesSearch = sub.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -145,12 +150,19 @@ export const CompanySubscriptionsManager = ({
   };
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <Building2 className="h-5 w-5" />
-          Company Subscriptions ({subscriptions.length})
-        </CardTitle>
+        <div className="flex items-center gap-4">
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Company Subscriptions ({subscriptions.length})
+          </CardTitle>
+          <Button onClick={() => setIsSubscriptionModalOpen(true)} size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Company
+          </Button>
+        </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="bg-green-50">Active: {stats.active}</Badge>
           <Badge variant="outline" className="bg-yellow-50">Trial: {stats.trial}</Badge>
@@ -340,5 +352,13 @@ export const CompanySubscriptionsManager = ({
         </div>
       </CardContent>
     </Card>
+
+    <CreateSubscriptionModal
+      isOpen={isSubscriptionModalOpen}
+      onClose={() => setIsSubscriptionModalOpen(false)}
+      onSubmit={onCreateSubscription}
+      plans={plans}
+    />
+    </>
   );
 };
