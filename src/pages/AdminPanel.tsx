@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
-import { SuperAdminActionPanels } from '@/components/admin/SuperAdminActionPanels';
+import { CompanyAdminsDashboard } from '@/components/admin/CompanyAdminsDashboard';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { ActivityLogs } from '@/components/admin/ActivityLogs';
 import { useUserRole } from '@/hooks/useUserRole';
-import { LayoutDashboard, Users, Activity } from 'lucide-react';
+import { LayoutDashboard, Users, Activity, Building2 } from 'lucide-react';
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -22,8 +22,17 @@ export default function AdminPanel() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
           <TabsTrigger value="dashboard" className="gap-2">
-            <LayoutDashboard className="w-4 h-4" />
-            <span className="hidden sm:inline">Dashboard</span>
+            {isSuperAdmin ? (
+              <>
+                <Building2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Companies</span>
+              </>
+            ) : (
+              <>
+                <LayoutDashboard className="w-4 h-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </>
+            )}
           </TabsTrigger>
           <TabsTrigger value="users" className="gap-2">
             <Users className="w-4 h-4" />
@@ -36,8 +45,8 @@ export default function AdminPanel() {
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-4">
-          {/* Super Admin sees action panels, regular admins see stats dashboard */}
-          {isSuperAdmin ? <SuperAdminActionPanels /> : <AdminDashboard />}
+          {/* Super Admin sees company admins dashboard, regular admins see stats dashboard */}
+          {isSuperAdmin ? <CompanyAdminsDashboard /> : <AdminDashboard />}
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4">
