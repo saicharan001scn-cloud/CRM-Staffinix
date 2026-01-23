@@ -4,23 +4,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { ActivityLogs } from '@/components/admin/ActivityLogs';
-import { RoleManagement } from '@/components/admin/RoleManagement';
-import { usePermissions } from '@/hooks/usePermissions';
-import { LayoutDashboard, Users, Activity, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, Activity } from 'lucide-react';
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const { isSuperAdmin, canManageRoles, canViewSystemSettings } = usePermissions();
 
   return (
     <MainLayout 
       title="Admin Panel" 
-      subtitle="Manage users, roles, and system settings"
+      subtitle="Manage users and system settings"
       showBackButton={true}
       hideGlobalSearch={true}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
+        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
           <TabsTrigger value="dashboard" className="gap-2">
             <LayoutDashboard className="w-4 h-4" />
             <span className="hidden sm:inline">Dashboard</span>
@@ -28,10 +25,6 @@ export default function AdminPanel() {
           <TabsTrigger value="users" className="gap-2">
             <Users className="w-4 h-4" />
             <span className="hidden sm:inline">Users</span>
-          </TabsTrigger>
-          <TabsTrigger value="roles" className="gap-2" disabled={!canManageRoles}>
-            <Shield className="w-4 h-4" />
-            <span className="hidden sm:inline">Roles</span>
           </TabsTrigger>
           <TabsTrigger value="activity" className="gap-2">
             <Activity className="w-4 h-4" />
@@ -45,10 +38,6 @@ export default function AdminPanel() {
 
         <TabsContent value="users" className="space-y-4">
           <UserManagement />
-        </TabsContent>
-
-        <TabsContent value="roles" className="space-y-4">
-          <RoleManagement />
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-4">

@@ -71,7 +71,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="py-6 px-3 space-y-1 overflow-y-auto scrollbar-hide">
+      <nav className="py-6 px-3 space-y-1">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
