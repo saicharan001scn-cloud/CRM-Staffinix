@@ -129,8 +129,11 @@ export function Sidebar() {
         </Link>
       </nav>
 
+      {/* Spacer */}
+      <div className="flex-1" />
+
       {/* User Profile */}
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border shrink-0">
         <div className="flex items-center gap-3">
           <div className={cn(
             "w-10 h-10 rounded-full flex items-center justify-center",
