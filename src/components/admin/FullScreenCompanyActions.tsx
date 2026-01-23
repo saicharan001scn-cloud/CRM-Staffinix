@@ -237,43 +237,50 @@ export function FullScreenCompanyActions({ admin, open, onClose, onActionComplet
     <>
       {/* Full screen overlay */}
       <div 
-        className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm animate-in fade-in-0 duration-200"
+        className="fixed inset-0 z-50 bg-background animate-in fade-in-0 duration-200 flex flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-labelledby="company-actions-title"
       >
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
-          <div className="container max-w-7xl mx-auto px-6 py-4">
+        {/* Header with Back Button */}
+        <div className="flex-shrink-0 bg-background border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            {/* Back Button - Prominent */}
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={onClose} 
+              className="mb-4 gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Admin Panel
+            </Button>
+            
+            {/* Title Section */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={onClose} className="mr-2">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Building2 className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h1 id="company-actions-title" className="text-xl font-bold">
-                      Platform Actions for {admin.company_name || 'Unknown Company'}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      Manage company settings, access, and features
-                    </p>
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Building2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h1 id="company-actions-title" className="text-xl font-bold">
+                    Platform Actions for {admin.company_name || 'Unknown Company'}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Manage company settings, access, and features
+                  </p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
+              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close" className="hidden sm:flex">
                 <X className="h-5 w-5" />
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        <ScrollArea className="h-[calc(100vh-5rem)]">
-          <div className="container max-w-7xl mx-auto px-6 py-6 space-y-8">
+        {/* Scrollable Content */}
+        <ScrollArea className="flex-1 overflow-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
             {/* Company Overview Section */}
             <section>
               <CompanyOverview admin={admin} />
@@ -353,10 +360,10 @@ export function FullScreenCompanyActions({ admin, open, onClose, onActionComplet
             </section>
 
             {/* Footer Actions */}
-            <div className="flex items-center justify-between pt-6 border-t border-border">
+            <div className="flex items-center justify-between pt-6 border-t border-border pb-8">
               <Button variant="outline" onClick={onClose}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to List
+                Back to Admin Panel
               </Button>
               <Button variant="ghost" className="text-muted-foreground">
                 <FileText className="h-4 w-4 mr-2" />
