@@ -67,7 +67,8 @@ export function UserManagement() {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [profileModalUserId, setProfileModalUserId] = useState<string | null>(null);
   const [editModalUserId, setEditModalUserId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'hierarchy'>('table');
+  // Super admins always see hierarchy view, admins can toggle
+  const [viewMode, setViewMode] = useState<'table' | 'hierarchy'>(isSuperAdmin ? 'hierarchy' : 'table');
 
   // Filter users based on permissions
   const visibleUsers = users.filter(u => {
@@ -273,19 +274,21 @@ export function UserManagement() {
       {/* View Mode Tabs + Header */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          {/* View Toggle */}
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'table' | 'hierarchy')} className="w-auto">
-            <TabsList className="grid grid-cols-2 w-[200px]">
-              <TabsTrigger value="table" className="gap-2">
-                <TableIcon className="w-4 h-4" />
-                Table
-              </TabsTrigger>
-              <TabsTrigger value="hierarchy" className="gap-2">
-                <FolderTree className="w-4 h-4" />
-                Hierarchy
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* View Toggle - Only show for non-super-admins */}
+          {!isSuperAdmin && (
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'table' | 'hierarchy')} className="w-auto">
+              <TabsList className="grid grid-cols-2 w-[200px]">
+                <TabsTrigger value="table" className="gap-2">
+                  <TableIcon className="w-4 h-4" />
+                  Table
+                </TabsTrigger>
+                <TabsTrigger value="hierarchy" className="gap-2">
+                  <FolderTree className="w-4 h-4" />
+                  Hierarchy
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
 
           {(canCreateUser || canCreateAdmin) && (
             <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">

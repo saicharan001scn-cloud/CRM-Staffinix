@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
@@ -6,7 +7,6 @@ import { SubmissionChart } from '@/components/dashboard/SubmissionChart';
 import { SkillDemandChart } from '@/components/dashboard/SkillDemandChart';
 import { TopConsultants } from '@/components/dashboard/TopConsultants';
 import { HotJobs } from '@/components/dashboard/HotJobs';
-import { SuperAdminDashboard } from '@/components/dashboard/SuperAdminDashboard';
 import { AddConsultantModal, NewConsultant } from '@/components/consultants/AddConsultantModal';
 import { 
   mockDashboardStats, 
@@ -23,24 +23,23 @@ import { usePermissions } from '@/hooks/usePermissions';
 export default function Dashboard() {
   const [showAddConsultant, setShowAddConsultant] = useState(false);
   const { isSuperAdmin } = usePermissions();
+  const navigate = useNavigate();
+
+  // Super Admins are redirected to Admin Panel - they don't see operational dashboard
+  useEffect(() => {
+    if (isSuperAdmin) {
+      navigate('/admin', { replace: true });
+    }
+  }, [isSuperAdmin, navigate]);
 
   const handleAddConsultant = (consultant: NewConsultant) => {
     console.log('New consultant:', consultant);
     toast.success('Consultant added successfully!');
   };
 
-  // Super Admin sees platform dashboard instead of operational dashboard
+  // Show nothing while redirecting super admin
   if (isSuperAdmin) {
-    return (
-      <MainLayout 
-        title="Platform Dashboard" 
-        subtitle="Super Admin • Platform Management Overview"
-        showBackButton={false}
-        hideGlobalSearch={true}
-      >
-        <SuperAdminDashboard />
-      </MainLayout>
-    );
+    return null;
   }
 
   return (
