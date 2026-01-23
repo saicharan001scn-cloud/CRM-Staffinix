@@ -89,70 +89,45 @@ export function Sidebar() {
           );
         })}
         
-        {/* Admin Panel, Billing & Settings - inline for Super Admin */}
-        {isSuperAdmin && (
-          <>
-            <Link
-              to="/billing"
-              className={cn(
-                "nav-link",
-                location.pathname === '/billing' && "nav-link-active"
-              )}
-            >
-              <CreditCard className="w-5 h-5 shrink-0 nav-icon transition-transform" />
-              <span>Billing</span>
-            </Link>
-            <Link
-              to="/admin"
-              className={cn(
-                "nav-link",
-                location.pathname === '/admin' && "nav-link-active"
-              )}
-            >
-              <ShieldCheck className="w-5 h-5 shrink-0 nav-icon transition-transform" />
-              <span>Admin Panel</span>
-            </Link>
-            <Link
-              to="/settings"
-              className={cn(
-                "nav-link",
-                location.pathname === '/settings' && "nav-link-active"
-              )}
-            >
-              <Settings className="w-5 h-5 shrink-0 nav-icon transition-transform" />
-              <span>Settings</span>
-            </Link>
-          </>
-        )}
-      </nav>
-
-      {/* Settings & Admin - only show at bottom for non-Super Admin */}
-      {!isSuperAdmin && (
-        <div className="p-3 border-t border-sidebar-border space-y-1">
-          {canAccessAdminPanel && (
-            <Link
-              to="/admin"
-              className={cn(
-                "nav-link",
-                location.pathname === '/admin' && "nav-link-active"
-              )}
-            >
-              <ShieldCheck className="w-5 h-5 shrink-0 nav-icon transition-transform" />
-              <span>Admin Panel</span>
-            </Link>
-          )}
+        {/* Admin Panel & Settings - inline for all users */}
+        {canAccessAdminPanel && (
           <Link
-            to="/settings"
+            to="/admin"
             className={cn(
               "nav-link",
-              location.pathname === '/settings' && "nav-link-active"
+              location.pathname === '/admin' && "nav-link-active"
             )}
           >
-            <Settings className="w-5 h-5 shrink-0 nav-icon transition-transform" />
-            <span>Settings</span>
+            <ShieldCheck className={cn("w-5 h-5 shrink-0 nav-icon transition-transform", location.pathname === '/admin' && "text-primary")} />
+            <span>Admin Panel</span>
           </Link>
-        </div>
-      )}
+        )}
+        
+        {/* Billing - Super Admin only */}
+        {isSuperAdmin && (
+          <Link
+            to="/billing"
+            className={cn(
+              "nav-link",
+              location.pathname === '/billing' && "nav-link-active"
+            )}
+          >
+            <CreditCard className={cn("w-5 h-5 shrink-0 nav-icon transition-transform", location.pathname === '/billing' && "text-primary")} />
+            <span>Billing</span>
+          </Link>
+        )}
+        
+        <Link
+          to="/settings"
+          className={cn(
+            "nav-link",
+            location.pathname === '/settings' && "nav-link-active"
+          )}
+        >
+          <Settings className={cn("w-5 h-5 shrink-0 nav-icon transition-transform", location.pathname === '/settings' && "text-primary")} />
+          <span>Settings</span>
+        </Link>
+      </nav>
 
       {/* User Profile */}
       <div className="p-4 border-t border-sidebar-border">
