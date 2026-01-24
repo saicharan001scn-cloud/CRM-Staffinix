@@ -10,13 +10,16 @@ import { LayoutDashboard, Users, Activity, Building2 } from 'lucide-react';
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const { isSuperAdmin } = useUserRole();
+  const { isSuperAdmin, isAdmin } = useUserRole();
+
+  // Hide back button for admins, show only for super admins
+  const showBackButton = isSuperAdmin;
 
   return (
     <MainLayout 
       title="Admin Panel" 
       subtitle={isSuperAdmin ? "Platform Management • Super Admin" : "Manage users and system settings"}
-      showBackButton={!isSuperAdmin}
+      showBackButton={showBackButton}
       hideGlobalSearch={true}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

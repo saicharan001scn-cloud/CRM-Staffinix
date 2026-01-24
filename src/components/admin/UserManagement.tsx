@@ -40,6 +40,7 @@ import { EditUserModal } from './EditUserModal';
 import { BulkActionsBar } from './BulkActionsBar';
 import { AnalyticsToggle } from './AnalyticsToggle';
 import { UserHierarchy } from './UserHierarchy';
+import { UserCardView } from './UserCardView';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Search, 
@@ -253,23 +254,18 @@ export function UserManagement() {
 
   return (
     <div className="space-y-4">
-      {/* Bulk Actions Bar */}
-      <BulkActionsBar
-        selectedCount={selectedUserIds.length}
-        selectedUserIds={selectedUserIds}
-        onClearSelection={() => setSelectedUserIds([])}
-        onBulkAction={handleBulkAction}
-      />
-
-      {/* Info banner for admins */}
-      {isAdmin && !isSuperAdmin && (
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-center gap-3">
-          <Info className="w-5 h-5 text-blue-400 shrink-0" />
-          <p className="text-sm text-blue-300">
-            As an Admin, you can manage Admins and Users. Super Admins are hidden from this view.
-          </p>
-        </div>
-      )}
+      {/* For admins (not super admins), show card view directly */}
+      {isAdmin && !isSuperAdmin ? (
+        <UserCardView />
+      ) : (
+        <>
+          {/* Bulk Actions Bar - Only for super admins */}
+          <BulkActionsBar
+            selectedCount={selectedUserIds.length}
+            selectedUserIds={selectedUserIds}
+            onClearSelection={() => setSelectedUserIds([])}
+            onBulkAction={handleBulkAction}
+          />
 
       {/* View Mode Tabs + Header */}
       <div className="flex flex-col gap-4">
@@ -467,28 +463,30 @@ export function UserManagement() {
         </Card>
       )}
 
-      {/* Modals */}
-      <CreateUserModal 
-        open={isCreateModalOpen} 
-        onOpenChange={setIsCreateModalOpen}
-        onSuccess={() => {
-          refetch();
-          setIsCreateModalOpen(false);
-        }}
-      />
+          {/* Modals */}
+          <CreateUserModal 
+            open={isCreateModalOpen} 
+            onOpenChange={setIsCreateModalOpen}
+            onSuccess={() => {
+              refetch();
+              setIsCreateModalOpen(false);
+            }}
+          />
 
-      <UserProfileModal
-        open={!!profileModalUserId}
-        onOpenChange={(open) => !open && setProfileModalUserId(null)}
-        userId={profileModalUserId}
-      />
+          <UserProfileModal
+            open={!!profileModalUserId}
+            onOpenChange={(open) => !open && setProfileModalUserId(null)}
+            userId={profileModalUserId}
+          />
 
-      <EditUserModal
-        open={!!editModalUserId}
-        onOpenChange={(open) => !open && setEditModalUserId(null)}
-        userId={editModalUserId}
-        onSuccess={refetch}
-      />
+          <EditUserModal
+            open={!!editModalUserId}
+            onOpenChange={(open) => !open && setEditModalUserId(null)}
+            userId={editModalUserId}
+            onSuccess={refetch}
+          />
+        </>
+      )}
     </div>
   );
 }
