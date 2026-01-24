@@ -235,16 +235,9 @@ export function FullScreenCompanyActions({ admin, open, onClose, onActionComplet
 
   return (
     <>
-      {/* Backdrop overlay */}
+      {/* Full screen overlay - z-[100] to ensure it covers the sidebar (z-50) */}
       <div 
-        className="fixed inset-0 z-[99] bg-black/50 animate-in fade-in-0 duration-200"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      
-      {/* Side panel - z-[100] to ensure it covers the sidebar (z-50) */}
-      <div 
-        className="fixed inset-y-0 right-0 z-[100] w-full max-w-2xl bg-background border-l border-border shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col overflow-hidden"
+        className="fixed inset-0 z-[100] bg-background animate-in fade-in-0 duration-200 flex flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-labelledby="company-actions-title"
