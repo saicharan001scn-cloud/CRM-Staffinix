@@ -30,11 +30,11 @@ export const MainLayout = memo(function MainLayout({
   headerContent 
 }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Sidebar />
       
       {/* Main Content */}
-      <div className="pl-64 min-h-screen">
+      <div className="ml-64 min-h-screen flex flex-col">
         {/* Top Header */}
         <header className="h-16 border-b border-border bg-card/50 backdrop-blur-xl sticky top-0 z-40">
           <div className="h-full px-6 flex items-center justify-between">
@@ -56,7 +56,7 @@ export const MainLayout = memo(function MainLayout({
         </header>
 
         {/* Page Content with transition animation */}
-        <main className="p-6 page-transition">
+        <main className="flex-1 p-6 page-transition">
           {/* Back Button & Page Title */}
           <div className="mb-8">
             {showBackButton && (
