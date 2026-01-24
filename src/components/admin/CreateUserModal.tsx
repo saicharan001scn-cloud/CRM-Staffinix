@@ -176,15 +176,15 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Create New User</DialogTitle>
+      <DialogContent className="max-w-none w-screen h-screen m-0 p-0 rounded-none border-none flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+          <DialogTitle className="text-xl">Create New User</DialogTitle>
           <DialogDescription>
             Add a new user to the system. They will receive login credentials via email.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
           <div className="grid grid-cols-2 gap-4">
             {/* Full Name */}
             <div className="space-y-2">
@@ -379,7 +379,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
             </Label>
           </div>
 
-          <DialogFooter>
+          <div className="sticky bottom-0 bg-background border-t p-6 flex justify-end gap-3 mt-auto">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
@@ -387,7 +387,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Create User
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

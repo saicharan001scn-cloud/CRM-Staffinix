@@ -225,14 +225,14 @@ export function CompanyAdminsDashboard() {
       </div>
 
       {/* Admins Table */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="py-4">
           <CardTitle className="text-base font-medium">
             {admins.length} Company Admin{admins.length !== 1 ? 's' : ''}
             {filters.status !== 'all' && ` (${filters.status})`}
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {admins.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Building2 className="h-12 w-12 mx-auto mb-3 opacity-50" />
