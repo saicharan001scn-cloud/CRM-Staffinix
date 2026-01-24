@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -252,16 +252,6 @@ export function FullScreenCompanyActions({ admin, open, onClose, onActionComplet
         {/* Header with Back Button */}
         <div className="flex-shrink-0 bg-background border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            {/* Back Button - Prominent */}
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={onClose} 
-              className="mb-4 gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Admin Panel
-            </Button>
             
             {/* Title Section */}
             <div className="flex items-center justify-between">
@@ -286,7 +276,7 @@ export function FullScreenCompanyActions({ admin, open, onClose, onActionComplet
         </div>
 
         {/* Scrollable Content */}
-        <ScrollArea className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
             {/* Company Overview Section */}
             <section>
@@ -367,18 +357,14 @@ export function FullScreenCompanyActions({ admin, open, onClose, onActionComplet
             </section>
 
             {/* Footer Actions */}
-            <div className="flex items-center justify-between pt-6 border-t border-border pb-8">
-              <Button variant="outline" onClick={onClose}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Admin Panel
-              </Button>
+            <div className="flex items-center justify-end pt-6 border-t border-border pb-8">
               <Button variant="ghost" className="text-muted-foreground">
                 <FileText className="h-4 w-4 mr-2" />
                 View Full Audit Log
               </Button>
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}
