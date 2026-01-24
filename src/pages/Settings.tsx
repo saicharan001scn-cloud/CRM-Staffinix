@@ -7,17 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { 
-  User, Bell, Shield, Palette, Link2, Mail, Database, Key, Globe, Zap, ChevronRight, Sun, Moon, Monitor
+  User, Bell, Shield, Palette, Sun, Moon, Monitor
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminOnly } from '@/components/layout/RoleBasedContent';
-
-const integrations = [
-  { name: 'SendGrid', status: 'connected', icon: Mail },
-  { name: 'Dice API', status: 'connected', icon: Globe },
-  { name: 'LinkedIn', status: 'pending', icon: Link2 },
-  { name: 'MongoDB', status: 'connected', icon: Database },
-];
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -105,39 +98,6 @@ export default function Settings() {
         </div>
 
         <div className="space-y-4">
-          <Card className="p-4 cursor-pointer hover:border-primary/50 transition-colors group" onClick={() => navigate('/settings/integrations')}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Zap className="w-4 h-4 text-primary" />Integrations</h3>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-            <div className="space-y-2">
-              {integrations.map((integration) => (
-                <div key={integration.name} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center"><integration.icon className="w-3 h-3 text-primary" /></div>
-                    <span className="text-xs font-medium text-foreground">{integration.name}</span>
-                  </div>
-                  <Badge variant={integration.status === 'connected' ? 'default' : 'secondary'} className={`text-[10px] ${integration.status === 'connected' ? 'bg-success/20 text-success' : ''}`}>{integration.status}</Badge>
-                </div>
-              ))}
-            </div>
-            <Button variant="outline" size="sm" className="w-full mt-3 h-7 text-xs">Manage Integrations</Button>
-          </Card>
-
-          <AdminOnly>
-            <Card className="p-4 cursor-pointer hover:border-primary/50 transition-colors group" onClick={() => navigate('/settings/api-keys')}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Key className="w-4 h-4 text-primary" />API Keys</h3>
-                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-              </div>
-              <div className="space-y-2">
-                <div className="p-2 bg-muted/50 rounded-lg"><p className="text-xs font-medium text-foreground">Production Key</p><p className="text-[10px] text-muted-foreground font-mono mt-0.5">sk_live_••••••••4x2k</p></div>
-                <div className="p-2 bg-muted/50 rounded-lg"><p className="text-xs font-medium text-foreground">Test Key</p><p className="text-[10px] text-muted-foreground font-mono mt-0.5">sk_test_••••••••8y3m</p></div>
-              </div>
-              <Button variant="outline" size="sm" className="w-full mt-3 h-7 text-xs">Manage API Keys</Button>
-            </Card>
-          </AdminOnly>
-
           {/* Theme Toggle - Working */}
           <Card className="p-4">
             <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
