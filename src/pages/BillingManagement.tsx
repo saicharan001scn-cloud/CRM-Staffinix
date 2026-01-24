@@ -119,6 +119,7 @@ const BillingManagement = () => {
       title="💳 Payment & Subscription Management" 
       subtitle="Manage plans, payments, and company subscriptions"
       hideGlobalSearch
+      showBackButton={false}
       headerContent={headerContent}
     >
       <div className="space-y-6">
