@@ -73,8 +73,8 @@ export default function Settings() {
   });
   const [activeTab, setActiveTab] = useState('profile');
 
-  // Hide back button for super admins
-  const showBackButton = !isSuperAdmin;
+  // Hide back button for admins and super admins
+  const showBackButton = !isAdmin && !isSuperAdmin;
 
   useEffect(() => {
     const root = document.documentElement;
@@ -94,7 +94,7 @@ export default function Settings() {
       title="Settings" 
       subtitle="Manage your account and preferences" 
       showBackButton={showBackButton} 
-      hideGlobalSearch={isSuperAdmin}
+      hideGlobalSearch={isAdmin || isSuperAdmin}
     >
       {/* Tabs for admins to access API Keys & Webhooks management */}
       {isAdmin && !isSuperAdmin ? (
