@@ -12,8 +12,8 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { isSuperAdmin, isAdmin } = useUserRole();
 
-  // Hide back button for admins, show only for super admins
-  const showBackButton = isSuperAdmin;
+  // Hide back button for super admins
+  const showBackButton = !isSuperAdmin;
 
   return (
     <MainLayout 
